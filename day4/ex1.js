@@ -47,7 +47,7 @@ fs.readFile('./ex1.input', (err, data) => {
         }
     }
 
-    const sleepiestGuard = _.maxBy(Object.values(guards), x => console.log(x.id, x.totalTime) || x.totalTime);
+    const sleepiestGuard = _.maxBy(Object.values(guards), x => x.totalTime);
     const sleepiestGuardMinute = parseInt(_.maxBy(Object.keys(sleepiestGuard.sleepMinutes), x => sleepiestGuard.sleepMinutes[x]));
 
     console.log(sleepiestGuard.id, sleepiestGuardMinute, sleepiestGuard.id * sleepiestGuardMinute);
