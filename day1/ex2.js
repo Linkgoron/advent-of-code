@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-fs.readFile('./ex1.input', (err, data) => {
+fs.readFile('./ex2.input', (err, data) => {
     if (err) throw new Error("data :(");
 
     const set = new Set();
