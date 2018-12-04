@@ -19,5 +19,5 @@ fs.readFile('./ex1.input', (err, data) => {
     }
     console.log('2', hasTwo);
     console.log('3', hasThree);
-    console.log('3', hasTwo * hasThree);
+    console.log('mul', hasTwo * hasThree);
 });

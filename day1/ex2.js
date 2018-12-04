@@ -3,8 +3,7 @@ const fs = require('fs');
 fs.readFile('./ex2.input', (err, data) => {
     if (err) throw new Error("data :(");
 
-    const set = new Set();
-    set.add(0);
+    const set = new Set([0]);    
     const actualInput = data.toString();
     const numbers = actualInput.split('\n').map(x => parseInt(x));
     let acc = 0;
