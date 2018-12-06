@@ -4,7 +4,8 @@ fs.readFile('./ex.input', (err, data) => {
     if (err) throw new Error("data :(");
     var dots = data.toString().split('\n')
         .map(x => x.split(',').map(x => Number(x.trim())))
-        .map(([x, y]) => ({ x, y, closest: [], size: 0, isInfinite: false }))
+        .map(([x, y]) => ({ x, y, closest: [], size: 0, isInfinite: false }));
+    
     const firstPoint = dots[0];
     let minX = firstPoint.x;
     let maxX = firstPoint.x;

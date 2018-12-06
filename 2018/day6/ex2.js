@@ -27,26 +27,24 @@ fs.readFile('./ex.input', (err, data) => {
             if (totalSum < maxDistance) {
                 // the edge logic is actually not needed for this exercise input, 
                 // but I wanted to do it anyway.
-                const isEdgeX = x === minX - 1 || x === maxX + 1;
-                const isEdgeY = y === minY - 1 || y === maxY + 1;
-                if (isEdgeX && isEdgeY) {
-                    const needToAdd = Math.floor((maxDistance - totalSum - 1) / dots.length);
-                    // compute triangle size.
-                    const willAdd = (needToAdd ** 2) / 2 + 1;
-                    safeRegion += willAdd;
-                } else if (isEdgeX) {
-                    // compute line size.
-                    const needToAdd = Math.floor((maxDistance - totalSum) / dots.length);
-                    safeRegion += needToAdd;
-                } else if (isEdgeY) {
-                    // compute line size.
-                    const needToAdd = Math.floor((maxDistance - totalSum) / dots.length);
-                    safeRegion += needToAdd;
-                } else {
-                    safeRegion++;
-                }
+                safeRegion += computeToAdd(x, y);
             }
         }
+    }
+
+    function computeToAdd(x, y) {
+        const isEdgeX = x === minX - 1 || x === maxX + 1;
+        const isEdgeY = y === minY - 1 || y === maxY + 1;
+        if (isEdgeX && isEdgeY) {
+            const needToAdd = Math.floor((maxDistance - totalSum - 1) / dots.length);
+            // compute triangle size.
+            return (needToAdd ** 2) / 2 + 1;
+        }
+        if (isEdgeX || isEdgeY) {
+            // compute line size.
+            return Math.floor((maxDistance - totalSum) / dots.length);
+        }
+        return 1;
     }
 
     console.log(safeRegion);
