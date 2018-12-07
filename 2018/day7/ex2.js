@@ -23,16 +23,18 @@ fs.readFile('./ex.input', (err, data) => {
         dag.get(to).before.add(from);
         dag.get(from).after.add(to);
     }
-    
+
     let time = 0;
     const workers = 5;
     while (dag.size > 0) {
-        time++;
         const values = [...dag.values()];
         const currentPosibs = values.filter(x => x.before.size === 0).sort((x, y) => x.name.charCodeAt(0) - y.name.charCodeAt(0));
+        const minTime = Math.min(...currentPosibs.map(x => x.time));
         for (const workOn of currentPosibs.slice(0, workers)) {
-            workOn.time--;
+            workOn.time -= minTime;
         }
+
+        time += minTime;
 
         const done = currentPosibs.filter(x => x.time === 0);
         for (const doneWork of done) {
