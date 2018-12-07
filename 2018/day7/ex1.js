@@ -26,9 +26,7 @@ fs.readFile('./ex.input', (err, data) => {
         const values = [...dag.values()];
 
         const currentPosibs = values.filter(x => x.before.size === 0).sort((x, y) => x.name.charCodeAt(0) - y.name.charCodeAt(0));
-        if (currentPosibs.length > 1) console.log('posibs', currentPosibs);
         const current = currentPosibs[0];
-        console.log(current);        
         order.push(current.name);
         for (const after of current.after) {
             dag.get(after).before.delete(current.name);
