@@ -28,7 +28,8 @@ fs.readFile('./ex.input', (err, data) => {
     const workers = 5;
     while (dag.size > 0) {
         const values = [...dag.values()];
-        const currentPosibs = values.filter(x => x.before.size === 0).sort((x, y) => x.name.charCodeAt(0) - y.name.charCodeAt(0));
+        const currentPosibs = values.filter(x => x.before.size === 0)
+                                    .sort((x, y) => x.name.charCodeAt(0) - y.name.charCodeAt(0));
         const minTime = Math.min(...currentPosibs.map(x => x.time));
         for (const workOn of currentPosibs.slice(0, workers)) {
             workOn.time -= minTime;
