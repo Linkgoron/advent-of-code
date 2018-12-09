@@ -1,3 +1,11 @@
+class LinkedNode {
+    constructor(value) {
+        this.next = null;
+        this.prev = null;
+        this.value = value;
+    }
+}
+
 module.exports = class LinkedList {
     constructor(initial) {
         this.head = new LinkedNode(initial)
@@ -13,8 +21,8 @@ module.exports = class LinkedList {
         this.pos = toRemove.next;
         if (toRemove === this.head) {
             this.head = this.pos;
-
         }
+        
         return toRemove.value;
     }
 
@@ -54,13 +62,5 @@ module.exports = class LinkedList {
             next = next.next;
         }
         console.log(values.join(' '));
-    }
-}
-
-class LinkedNode {
-    constructor(value) {
-        this.next = null;
-        this.prev = null;
-        this.value = value;
     }
 }
