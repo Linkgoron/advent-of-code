@@ -14,21 +14,9 @@ fs.readFile('./ex.input', (err, data) => {
         else if (step === 'sw') { pos.y -= 0.5; pos.x -= 1; }
     }
 
-    let stepsBack = 0;
-    while (pos.x !== 0 || pos.y !== 0) {
-        stepsBack++;
-        if (pos.x === 0) {
-            if (pos.y > 0) pos.y--
-            else pos.y++;
-            continue;
-        }
-
-        if (pos.x > 0) { pos.x -= 1; }
-        else { pos.x += 1; }
-
-        if (pos.y > 0) { pos.y -= 0.5; }
-        else { pos.y += 0.5; }
-    }
-
-    console.log(stepsBack);
+    pos.y = Math.abs(pos.y);
+    pos.x = Math.abs(pos.x);
+    const diagonalSteps = Math.min(pos.y / 0.5, pos.x);
+    const onedirection = (pos.x >= pos.y / 0.5) ? (pos.x - diagonalSteps) : (pos.y - (0.5 * diagonalSteps));
+    console.log(diagonalSteps + onedirection);
 });
