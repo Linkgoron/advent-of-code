@@ -10,7 +10,7 @@ fs.readFile('./ex.input', (err, data) => {
 
     for (let i = 0; i < players; i++) arr[i] = String.fromCharCode(97 + i);
     const initialState = arr.join('');
-    const maxAmountOfRounds = 1000000;
+    const maxAmountOfRounds = 1000000000;
     for (var cycle = 0; (cycle === 0 || arr.join('') !== initialState) && cycle < maxAmountOfRounds; cycle++) {
         dance(commands, arr);
     }
