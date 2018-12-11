@@ -25,16 +25,12 @@ function blockPowerLevel(x, y, gridSerialNumber) {
     let sum = max;
     for (let squareSize = 2; squareSize <= Math.min(301 - x, 301 - y); squareSize++) {
         const diff = squareSize - 1;
-        for (let l = x; l <= Math.min(x + diff, 300); l++) {
-            if (y + diff <= 300) {
-                sum += powerLevel(l, y + diff, gridSerialNumber);
-            }
+        for (let l = x; l <= x + diff; l++) {
+            sum += powerLevel(l, y + diff, gridSerialNumber);
         }
-        for (let m = y; m <= Math.min(y + diff, 300); m++) {
-            // prevent double counting.
-            if (x + diff < 300) {
-                sum += powerLevel(x + diff, m, gridSerialNumber);
-            }
+        // < to prevent double counting of (x+diff,y+diff).
+        for (let m = y; m < y + diff; m++) {
+            sum += powerLevel(x + diff, m, gridSerialNumber);
         }
         if (sum > max) {
             max = sum;
