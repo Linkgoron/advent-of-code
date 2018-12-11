@@ -1,57 +1,51 @@
 const fs = require('fs');
-const _ = require('lodash');
+
 
 fs.readFile('./ex.input', (err, data) => {
     if (err) throw new Error("data :(");
     const gridSerialNumber = parseInt(data.toString());
 
     let max = { x: 0, y: 0, powerLevel: -1000 };
-    const cache = new Map();
-    for (let squareSize = 1; squareSize < 301; squareSize++) {
-        console.log(squareSize);
-        for (let i = 1; i < 301; i++) {
-            for (let j = 1; j < 301; j++) {
-                const squarePowerLevel = blockPowerLevel(i, j, gridSerialNumber, squareSize, cache);
-                cache.set(coordinate(i, j, squareSize), squarePowerLevel);
-                if (squarePowerLevel > max.powerLevel) {
-                    max = {
-                        x: i, y: j, powerLevel: squarePowerLevel, squareSize: squareSize
-                    };
-                }
+    for (let i = 1; i < 301; i++) {
+        for (let j = 1; j < 301; j++) {
+            const { max: curMax, size } = blockPowerLevel(i, j, gridSerialNumber);
+            if (curMax > max.powerLevel) {
+                max = {
+                    x: i, y: j, powerLevel: curMax, squareSize: size
+                };
             }
-        }
 
-        if (squareSize > 2) {
-            for (let i = 1; i < 301; i++) {
-                for (let j = 1; j < 301; j++) {                    
-                    cache.delete(coordinate(i, j, squareSize - 1));
-                }
-            }
         }
     }
     console.log(`${max.x},${max.y},${max.squareSize}`);
 });
 
 
-function blockPowerLevel(x, y, gridSerialNumber, squareSize, cache) {
-
-    const diff = squareSize - 1;
-    const smallerSquare = cache.get(coordinate(x, y, squareSize - 1)) || 0;
+function blockPowerLevel(x, y, gridSerialNumber) {
+    let max = powerLevel(x, y, gridSerialNumber);
+    let size = 1;
     let sum = 0;
-    for (let i = x; i <= Math.min(x + diff, 300); i++) {
-        if (y + diff < 300) {
-            sum += powerLevel(i, y + diff, gridSerialNumber);
+    for (let squareSize = 1; squareSize <= Math.min(301 - x, 301 - y); squareSize++) {
+        const diff = squareSize - 1;
+        for (let l = x; l <= Math.min(x + diff, 300); l++) {
+            if (y + diff <= 300) {
+                sum += powerLevel(l, y + diff, gridSerialNumber);
+            }
+        }
+        for (let m = y; m <= Math.min(y + diff, 300); m++) {
+            if (x + diff <= 300) {
+                sum += powerLevel(x + diff, m, gridSerialNumber);
+            }
+        }
+        if (sum > max) {
+            max = sum;
+            size = squareSize;
         }
     }
-    for (let j = y; j <= Math.min(y + diff, 300); j++) {
-        if (x + diff < 300) {
-            sum += powerLevel(x + diff, j, gridSerialNumber);
-        }
-    }
-    return smallerSquare + sum;
+    return { max, size };
 }
 
-const coordinate = (a, b, c) => `${a}-${b}-${c}`;
+const coordinate = (a, b) => `${a}-${b}`;
 
 
 function powerLevel(x, y, gridSerialNumber) {
