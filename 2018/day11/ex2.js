@@ -24,8 +24,8 @@ fs.readFile('./ex.input', (err, data) => {
 function blockPowerLevel(x, y, gridSerialNumber) {
     let max = powerLevel(x, y, gridSerialNumber);
     let size = 1;
-    let sum = 0;
-    for (let squareSize = 1; squareSize <= Math.min(301 - x, 301 - y); squareSize++) {
+    let sum = max;
+    for (let squareSize = 2; squareSize <= Math.min(301 - x, 301 - y); squareSize++) {
         const diff = squareSize - 1;
         for (let l = x; l <= Math.min(x + diff, 300); l++) {
             if (y + diff <= 300) {
@@ -33,7 +33,8 @@ function blockPowerLevel(x, y, gridSerialNumber) {
             }
         }
         for (let m = y; m <= Math.min(y + diff, 300); m++) {
-            if (x + diff <= 300) {
+            // prevent double counting.
+            if (x + diff < 300) {
                 sum += powerLevel(x + diff, m, gridSerialNumber);
             }
         }
@@ -44,9 +45,6 @@ function blockPowerLevel(x, y, gridSerialNumber) {
     }
     return { max, size };
 }
-
-const coordinate = (a, b) => `${a}-${b}`;
-
 
 function powerLevel(x, y, gridSerialNumber) {
     const rackId = x + 10;

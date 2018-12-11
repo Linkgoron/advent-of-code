@@ -29,8 +29,6 @@ function blockPowerLevel(x, y, gridSerialNumber) {
     return sum
 }
 
-const coordinate = (a, b) => (2 ** a) * (3 ** b);
-
 function powerLevel(x, y, gridSerialNumber) {
     const rackId = x + 10;
     const step2 = rackId * y;
