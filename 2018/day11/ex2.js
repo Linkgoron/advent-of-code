@@ -5,19 +5,17 @@ fs.readFile('./ex.input', (err, data) => {
     if (err) throw new Error("data :(");
     const gridSerialNumber = parseInt(data.toString());
 
-    let max = { x: 0, y: 0, powerLevel: -1000 };
+    let max = null;
     for (let i = 1; i < 301; i++) {
         for (let j = 1; j < 301; j++) {
-            const { max: curMax, size } = blockPowerLevel(i, j, gridSerialNumber);
-            if (curMax > max.powerLevel) {
-                max = {
-                    x: i, y: j, powerLevel: curMax, squareSize: size
-                };
+            const curMax = blockPowerLevel(i, j, gridSerialNumber);
+            if (max === null || curMax.max > max.max) {
+                max = curMax;
             }
 
         }
     }
-    console.log(`${max.x},${max.y},${max.squareSize}`);
+    console.log(`${max.x},${max.y},${max.size}`);
 });
 
 
@@ -43,7 +41,9 @@ function blockPowerLevel(x, y, gridSerialNumber) {
             size = squareSize;
         }
     }
-    return { max, size };
+    return {
+        x, y, max, size
+    };
 }
 
 function powerLevel(x, y, gridSerialNumber) {
