@@ -9,8 +9,7 @@ fs.readFile('./ex.input', (err, rawData) => {
         .map((c, x) => ({ x, y, letter: c })))
         .reduce((acc, r) => acc.concat(r), []);
     const map = new Map();
-    const { directionChangeMapping, directionMap, nextDirection } = HelperObject;
-    const carts = [];
+    let carts = [];
     let cartId = 0;
     for (const { x, y, letter } of data) {
         if (letter !== ' ') {
@@ -24,18 +23,23 @@ fs.readFile('./ex.input', (err, rawData) => {
             };
             map.set(key(x, y), location);
             if (isCart) {
+                const signToDirection = {
+                    '<': 'left',
+                    '>': 'right',
+                    'v': 'down',
+                    '^': 'up'
+                };
                 carts.push({
+                    steps: 0,
                     id: cartId++,
                     location,
                     lastTurn: 'right',
-                    direction:
-                        letter === '<' ? 'left' :
-                            letter === '>' ? 'right' :
-                                letter === 'v' ? 'down' : 'up',
+                    direction: signToDirection[letter],
                     set(other) {
                         this.location = other.location;
                         this.lastTurn = other.lastTurn;
                         this.direction = other.direction;
+                        this.steps++;
                     }
                 });
             }
@@ -43,6 +47,33 @@ fs.readFile('./ex.input', (err, rawData) => {
     }
 
     function getNextIntersectionMovementDirection(currentCartDirection, lastTurn) {
+        const directionMap = {
+            left: {
+                'left': 'down',
+                'right': 'up',
+                'straight': 'left'
+            },
+            right: {
+                'left': 'up',
+                'right': 'down',
+                'straight': 'right'
+            },
+            up: {
+                'left': 'left',
+                'right': 'right',
+                'straight': 'up'
+            },
+            down: {
+                'left': 'right',
+                'right': 'left',
+                'straight': 'down'
+            },
+        };
+        const nextDirection = {
+            'left': 'straight',
+            'straight': 'right',
+            'right': 'left'
+        }
         const action = nextDirection[lastTurn];
         const moveDirection = directionMap[currentCartDirection][action];
         return {
@@ -66,6 +97,7 @@ fs.readFile('./ex.input', (err, rawData) => {
     }
 
     function getNext(cart, map) {
+
         if (cart.location.isIntersection) {
             const movement = getNextIntersectionDirection(cart.location, cart.direction, cart.lastTurn, map);
             return {
@@ -76,6 +108,12 @@ fs.readFile('./ex.input', (err, rawData) => {
         }
 
         if (cart.location.isDirectionChange) {
+            const directionChangeMapping = {
+                left: { '\\': 'up', '\/': 'down' },
+                right: { '\\': 'down', '\/': 'up' },
+                up: { '\\': 'left', '\/': 'right' },
+                down: { '\\': 'right', '\/': 'left' }
+            }
             const direction = directionChangeMapping[cart.direction][cart.location.letter];
             const nextLocation = getNextByDirection(cart.location, direction, map);
             return {
@@ -93,10 +131,12 @@ fs.readFile('./ex.input', (err, rawData) => {
             direction: cart.direction
         };
     }
+
     let steps = 0;
     let noCrash = true;
     let crashLocation = null;
     const totalSteps = 1000;
+    print(map, carts, rowCount, colCount);
     while (noCrash && steps < totalSteps) {
         steps++;
         carts.sort((c1, c2) => c1.location.y - c2.location.y || c1.location.x - c2.location.x);
@@ -105,7 +145,7 @@ fs.readFile('./ex.input', (err, rawData) => {
             if (nextPhase.location === undefined) {
                 throw new Error("bad location");
             }
-            
+
             cart.set(nextPhase);
             const cartsInSameLocation = carts.filter(c => c !== cart && c.location === cart.location);
             if (cartsInSameLocation.length > 0) {
@@ -115,57 +155,22 @@ fs.readFile('./ex.input', (err, rawData) => {
             }
         }
     }
-    console.log(steps, crashLocation);
+    print(map, carts, rowCount, colCount);
+    console.log(steps, crashLocation.x, crashLocation.y);
 });
 
-var HelperObject = {
-    directionMap: {
-        left: {
-            'left': 'down',
-            'right': 'up',
-            'straight': 'left'
-        },
-        right: {
-            'left': 'up',
-            'right': 'down',
-            'straight': 'right'
-        },
-        up: {
-            'left': 'left',
-            'right': 'right',
-            'straight': 'up'
-        },
-        down: {
-            'left': 'right',
-            'right': 'left',
-            'straight': 'down'
-        },
-    },
-    nextDirection: {
-        'left': 'straight',
-        'straight': 'right',
-        'right': 'left'
-    },
-    dirToSign: {
+function print(map, carts, rows, cols) {
+    const dirToSign = {
         'left': '<',
         'right': '>',
         'up': '^',
         'down': 'v'
-    },
-    directionChangeMapping: {
-        left: { '\\': 'up', '\/': 'down' },
-        right: { '\\': 'down', '\/': 'up' },
-        up: { '\\': 'left', '\/': 'right' },
-        down: { '\\': 'right', '\/': 'left' }
-    }
-}
-
-function print(map, carts, rows, cols) {
+    };
     for (let row = 0; row < rows; row++) {
         let rowPrint = '';
         const cartMap = new Map();
         for (const cart of carts) {
-            cartMap.set(key(cart.location.x, cart.location.y), HelperObject.dirToSign[cart.direction]);
+            cartMap.set(key(cart.location.x, cart.location.y), dirToSign[cart.direction]);
         }
         for (let col = 0; col < cols; col++) {
             const pointKey = key(col, row);
@@ -178,7 +183,9 @@ function print(map, carts, rows, cols) {
                 const letter = (addedItem || { letter: ' ' }).letter;
                 rowPrint += letter;
             }
+
         }
         console.log(rowPrint);
     }
+    console.log('');
 }

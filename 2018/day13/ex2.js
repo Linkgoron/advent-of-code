@@ -155,6 +155,7 @@ fs.readFile('./ex.input', (err, rawData) => {
         // console.log(carts);
         // print(map, carts, rowCount, colCount);
     }
+    print(map, carts, rowCount, colCount);
     console.log(steps, carts[0]);
 });
 
