@@ -1,64 +1,28 @@
 const fs = require('fs');
+const key = (x, y) => `${x},${y}`;
 fs.readFile('./ex.input', (err, rawData) => {
     if (err) throw new Error("data :(");
-    const key = (x, y) => `${x},${y}`;
-    const data = rawData.toString().split('\r\n').map((row, y) => row.split('').map((c, x) => ({ x, y, letter: c })))
+    const rows = rawData.toString().split('\r\n');
+    const rowCount = rows.length;
+    const colCount = rows[0].length;
+    const data = rows.map((row, y) => row.split('')
+        .map((c, x) => ({ x, y, letter: c })))
         .reduce((acc, r) => acc.concat(r), []);
     const map = new Map();
-    const directionMap = {
-        left: {
-            'left': 'up',
-            'right': 'down',
-            'straight': 'left'
-        },
-        right: {
-            'left': 'down',
-            'right': 'up',
-            'straight': 'right'
-        },
-        up: {
-            'left': 'left',
-            'right': 'right',
-            'straight': 'up'
-        },
-        down: {
-            'left': 'right',
-            'right': 'left',
-            'straight': 'down'
-        },
-    }
-    const nextDirection = {
-        'left': 'straight',
-        'straight': 'right',
-        'right': 'left'
-    };
-
-    const opposite = {
-        'up': 'down',
-        'down': 'up',
-        'left': 'right',
-        'right': 'left'
-    };
-
-    const directionChangeMapping = {
-        left: { '\\': 'up', '\/': 'down' },
-        right: { '\\': 'down', '\/': 'up' },
-        up: { '\\': 'left', '\/': 'right' },
-        down: { '\\': 'right', '\/': 'left' }
-    };
+    const { directionChangeMapping, directionMap, nextDirection } = HelperObject;
     const carts = [];
-    cartId = 0;
+    let cartId = 0;
     for (const { x, y, letter } of data) {
         if (letter !== ' ') {
+            const isCart = letter === '<' || letter === '>' || letter === 'v' || letter === '^';
             const location = {
                 isIntersection: letter === '+',
                 isDirectionChange: letter === `\\` || letter === '\/',
-                isPipe: letter === `|` || letter === '-' || letter === '<' || letter === '>' || letter === 'v' || letter === '^',
-                letter,
+                isPipe: letter === `|` || letter === '-' || isCart,
+                letter: (letter === '<' || letter === '>') ? '-' : ((letter === 'v' || letter === '^') ? '|' : letter),
                 x, y
             };
             map.set(key(x, y), location);
-            const isCart = letter === '<' || letter === '>' || letter === 'v' || letter === '^';
             if (isCart) {
                 carts.push({
                     id: cartId++,
@@ -122,7 +86,6 @@ fs.readFile('./ex.input', (err, rawData) => {
 
         }
 
-
         const defaultDirection = getNextByDirection(cart.location, cart.direction, map);
         return {
             location: defaultDirection,
@@ -133,24 +96,89 @@ fs.readFile('./ex.input', (err, rawData) => {
     let steps = 0;
     let noCrash = true;
     let crashLocation = null;
-    while (noCrash && steps < 105) {
+    const totalSteps = 1000;
+    while (noCrash && steps < totalSteps) {
         steps++;
         carts.sort((c1, c2) => c1.location.y - c2.location.y || c1.location.x - c2.location.x);
-        console.log(carts);
         for (const cart of carts) {
             const nextPhase = getNext(cart, map);
             if (nextPhase.location === undefined) {
                 throw new Error("bad location");
             }
+            
             cart.set(nextPhase);
             const cartsInSameLocation = carts.filter(c => c !== cart && c.location === cart.location);
             if (cartsInSameLocation.length > 0) {
                 noCrash = false;
                 crashLocation = nextPhase.location;
-                console.log(cart, cartsInSameLocation[0]);
                 break;
             }
         }
     }
     console.log(steps, crashLocation);
 });
+
+var HelperObject = {
+    directionMap: {
+        left: {
+            'left': 'down',
+            'right': 'up',
+            'straight': 'left'
+        },
+        right: {
+            'left': 'up',
+            'right': 'down',
+            'straight': 'right'
+        },
+        up: {
+            'left': 'left',
+            'right': 'right',
+            'straight': 'up'
+        },
+        down: {
+            'left': 'right',
+            'right': 'left',
+            'straight': 'down'
+        },
+    },
+    nextDirection: {
+        'left': 'straight',
+        'straight': 'right',
+        'right': 'left'
+    },
+    dirToSign: {
+        'left': '<',
+        'right': '>',
+        'up': '^',
+        'down': 'v'
+    },
+    directionChangeMapping: {
+        left: { '\\': 'up', '\/': 'down' },
+        right: { '\\': 'down', '\/': 'up' },
+        up: { '\\': 'left', '\/': 'right' },
+        down: { '\\': 'right', '\/': 'left' }
+    }
+}
+
+function print(map, carts, rows, cols) {
+    for (let row = 0; row < rows; row++) {
+        let rowPrint = '';
+        const cartMap = new Map();
+        for (const cart of carts) {
+            cartMap.set(key(cart.location.x, cart.location.y), HelperObject.dirToSign[cart.direction]);
+        }
+        for (let col = 0; col < cols; col++) {
+            const pointKey = key(col, row);
+            if (cartMap.has(pointKey)) {
+                cartMap.get(pointKey);
+                const addedItem = cartMap.get(pointKey);
+                rowPrint += addedItem;
+            } else {
+                const addedItem = map.get(pointKey);
+                const letter = (addedItem || { letter: ' ' }).letter;
+                rowPrint += letter;
+            }
+        }
+        console.log(rowPrint);
+    }
+}
