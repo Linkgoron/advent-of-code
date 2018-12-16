@@ -31,39 +31,42 @@ fs.readFile('./ex.input', (err, rawData) => {
     const foundCommands = new Set();
     const opToString = {};
     const opSets = {};
-    for (let i = 0; i < 16; i++) {
-        opSets[i] = [];
-    }
 
     for (const test of tests) {
+        const currentOp = test.command.op;
         const sols = checkFits(test);
         if (sols.length === 1) {
-            opToString[test.command.op] = sols[0];
+            opToString[currentOp] = sols[0];
             foundCommands.add(sols[0]);
-        } else if (opToString[test.command.op] === undefined) {
-            opSets[test.command.op].push(sols);
+        } else if (opToString[currentOp] === undefined) {
+            if (opSets[currentOp] === undefined) {
+                opSets[currentOp] = new Set(sols);
+            } else {
+                const currentSol = new Set(sols);
+                const toDelete = new Set();
+                for (const item of opSets[currentOp]) {
+                    if (!currentSol.has(item)) toDelete.add(item);
+                }
+                for (const toDel of toDelete) {
+                    opSets[currentOp].delete(toDel);
+                }
+            }
+            if (opSets[currentOp].size === 1) {
+                const { value: command } = opSets[currentOp].values().next();
+                opToString[currentOp] = command;
+                foundCommands.add(command);
+            }
         }
     }
 
     while (foundCommands.size < 16) {
         for (const op in opSets) {
             if (opToString[op] !== undefined) continue;
-            const arrays = opSets[op];
-            const possibleCommand = new Set(arrays[0]);
+            const possibleCommand = opSets[op];
             for (const found of foundCommands) {
                 possibleCommand.delete(found);
             }
-            if (possibleCommand.size !== 1) {
-                for (let j = 1; j < arrays.length; j++) {
-                    const currentPossibilities = new Set(arrays[j])
-                    for (const command of currentPossibilities) {
-                        if (!possibleCommand.has(command)) possibleCommand.delete(command);
-                    }
-                    for (const command of possibleCommand) {
-                        if (!currentPossibilities.has(command)) possibleCommand.delete(command);
-                    }
-                }
-            }
+
             if (possibleCommand.size === 1) {
                 const { value: command } = possibleCommand.values().next();
                 opToString[op] = command;
