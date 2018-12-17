@@ -1,10 +1,10 @@
 const fs = require('fs');
 fs.readFile('./ex.input', (err, rawData) => {
     if (err) throw new Error("data :(");
-    const fileRows = rawData.toString().split('\r\n');
-    const testRows = fileRows.slice(0, 3220);
-    const commands = fileRows.slice(3223)
-        .map(x => x.trim().split(' ').map(x => parseInt(x)))
+    const [allTestRows, allCommandRows] = rawData.toString().split('\r\n\r\n\r\n\r\n');
+    const testRows = allTestRows.split('\n').map(x => x.trim());
+    console.log(testRows.length);
+    const commands = allCommandRows.split('\n').map(x => x.trim().split(' ').map(x => parseInt(x)))
         .map(op => ({
             op: op[0],
             first: op[1],
@@ -35,17 +35,17 @@ fs.readFile('./ex.input', (err, rawData) => {
     for (const test of tests) {
         const currentOp = test.command.op;
         const sols = checkFits(test);
-        if (sols.length === 1) {
-            opToString[currentOp] = sols[0];
-            foundCommands.add(sols[0]);
+        if (sols.size === 1) {
+            const { value: command } = sols.values().next();
+            opToString[currentOp] = command;
+            foundCommands.add(command);
         } else if (opToString[currentOp] === undefined) {
             if (opSets[currentOp] === undefined) {
-                opSets[currentOp] = new Set(sols);
+                opSets[currentOp] = sols;
             } else {
-                const currentSol = new Set(sols);
                 const toDelete = new Set();
                 for (const item of opSets[currentOp]) {
-                    if (!currentSol.has(item)) toDelete.add(item);
+                    if (!sols.has(item)) toDelete.add(item);
                 }
                 for (const toDel of toDelete) {
                     opSets[currentOp].delete(toDel);
@@ -85,14 +85,14 @@ fs.readFile('./ex.input', (err, rawData) => {
 
 function checkFits(test) {
     const commands = ['addr', 'addi', 'mulr', 'muli', 'banr', 'bani', 'borr', 'bori', 'setr', 'seti', 'gtir', 'gtri', 'gtrr', 'eqir', 'eqri', 'eqrr'];
-    const matches = [];
+    const matches = new Set();
     for (const command of commands) {
         const result = execute(test.preMemory, command, test.command);
         if (result[0] === test.postMemory[0] &&
             result[1] === test.postMemory[1] &&
             result[2] === test.postMemory[2] &&
             result[3] === test.postMemory[3]) {
-            matches.push(command);
+            matches.add(command);
         }
     }
     return matches;

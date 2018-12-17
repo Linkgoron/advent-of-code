@@ -1,8 +1,8 @@
 const fs = require('fs');
 fs.readFile('./ex.input', (err, rawData) => {
     if (err) throw new Error("data :(");
-    const rows = rawData.toString().split('\r\n').slice(0, 3220);
-
+    const [allTestRows, _] = rawData.toString().split('\r\n\r\n\r\n\r\n');
+    const rows = allTestRows.split('\r\n');
     const tests = [];
     for (let i = 0; i < rows.length - 3; i += 4) {
         const preMemory = rows[i].substring(9).split(',').map(x => x.trim().replace(']', '').replace('[', '')).map(x => parseInt(x));
@@ -22,7 +22,7 @@ fs.readFile('./ex.input', (err, rawData) => {
 
     let threeOrAbove = 0;
     for (const test of tests) {
-        if (checkFits(test).length >= 3) {
+        if (checkFits(test).size >= 3) {
             threeOrAbove++;
         }
     }
@@ -32,14 +32,14 @@ fs.readFile('./ex.input', (err, rawData) => {
 
 function checkFits(test) {
     const commands = ['addr', 'addi', 'mulr', 'muli', 'banr', 'bani', 'borr', 'bori', 'setr', 'seti', 'gtir', 'gtri', 'gtrr', 'eqir', 'eqri', 'eqrr'];
-    const matches = [];
+    const matches = new Set();
     for (const command of commands) {
-        const result = execute(test.preMemory, command, test.command);        
+        const result = execute(test.preMemory, command, test.command);
         if (result[0] === test.postMemory[0] &&
             result[1] === test.postMemory[1] &&
             result[2] === test.postMemory[2] &&
             result[3] === test.postMemory[3]) {
-            matches.push(command);
+            matches.add(command);
         }
     }
     return matches;
