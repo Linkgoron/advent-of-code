@@ -1,5 +1,11 @@
-set b 108400
-set c 125400
+set b 84
+set c b
+jnz a 2
+jnz 1 5
+mul b 100
+sub b -100000
+set c b
+sub c -17000
 set f 1
 set d 2
 set e 2
