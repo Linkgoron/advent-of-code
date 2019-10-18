@@ -40,7 +40,7 @@ fs.readFile('./ex.input', (err, data) => {
         .map(x => [x, { holding: [], output: -x, isOutput: true }]);
 
     const botMap = new Map(bots.map(x => [x.bot, x]).concat(outputList))
-    while (!bots.filter(x => x.holding.includes(61) && x.holding.includes(17)).length > 0) {
+    while (!bots.some(x => x.holding.includes(61) && x.holding.includes(17))) {
         const moving = bots.filter(x => x.holding.length === 2);
         for (const mover of moving) {
             mover.holding.sort((a, b) => b - a);
