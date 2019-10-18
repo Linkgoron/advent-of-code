@@ -1,5 +1,4 @@
 const fs = require('fs');
-const crypto = require('crypto');
 
 const MICROCHIP = 1;
 const GENERATOR = 2;
