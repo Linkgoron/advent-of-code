@@ -1,23 +1,37 @@
 const fs = require('fs');
 const crypto = require('crypto');
 
+const MICROCHIP = 1;
+const GENERATOR = 2;
+let nameMap = new Map();
+
+function nameToNumber(name) {
+    if (nameMap.has(name.trim())) {
+        return nameMap.get(name);
+    }
+    nameMap.set(name.trim(), nameMap.size + 1);
+    return nameMap.size;
+}
+
 fs.readFile('./ex.input', (err, data) => {
     if (err) throw new Error("data :(");
+    console.time();
     const floors = data.toString().split('\r\n').map(x => x.trim())
         .slice(0, 3)
         .map(x => x.split('contains a ')[1])
         .map((x, i) => (
             x.replace(' and a', ' a').replace(',', '').replace('.', '').split(' a ').map(row => ({
-                type: row.split(' ')[0].split('-')[0].replace(',', '').replace('.', ''),
-                tech: row.split(' ')[1].replace(',', '').replace('.', '')
-            })).sort((a, b) => b.type.localeCompare(a.type) || a.tech.localeCompare(b.tech))
+                type: nameToNumber(row.split(' ')[0].split('-')[0].replace(',', '').replace('.', '')),
+                tech: row.split(' ')[1].replace(',', '').replace('.', '').trim() === 'microchip' ? MICROCHIP : GENERATOR
+            })).sort((a, b) => b.type - a.type || b.tech - a.tech)
         ));
 
-    floors[0].push({ type: 'elerium', tech: 'generator' });
-    floors[0].push({ type: 'elerium', tech: 'microchip' });
-    floors[0].push({ type: 'dilithium', tech: 'generator' });
-    floors[0].push({ type: 'dilithium', tech: 'microchip' });
-    floors[0].sort((a, b) => b.type.localeCompare(a.type) || a.tech.localeCompare(b.tech));
+   
+    floors[0].sort((a, b) => b.type - a.type || b.tech - a.tech);
+    floors[0].push({ type: nameToNumber('elerium'), tech: GENERATOR });
+    floors[0].push({ type: nameToNumber('elerium'), tech: MICROCHIP });
+    floors[0].push({ type: nameToNumber('dilithium'), tech: GENERATOR });
+    floors[0].push({ type: nameToNumber('dilithium'), tech: MICROCHIP });
     floors.push([]);
 
     const state = {
@@ -27,25 +41,19 @@ fs.readFile('./ex.input', (err, data) => {
     }
     let history = new Set();
     function hash(state) { 
-        const turn = state.turn;
-        state.turn =0;
-        const res = crypto.createHash('md5').update(JSON.stringify(state)).digest("base64").replace(/=/g,''); 
-        state.turn = turn;
-        return res;
+        const floorHash = state.floors.map(floor => `${floor.map(x=>`${x.type}-${x.tech}`).join(',')}`).join('|');
+        return `${state.elevator}>${floorHash}`;
     }
     // function hash(state) { return hashString(JSON.stringify(state)) }
     history.addState = function (state) { this.add(hash(state)) };
     history.hasState = function (state) { return this.has(hash(state)); };
-    console.log(JSON.stringify(state),hash(state));
-    console.time();
-
+    console.log(hash(state))
     let lastTurn = 0;
     const states = new Set([state]);
     for (const currentState of states) {
         if (isDone(currentState)) {
-            console.log('done', currentState.turn);
             console.timeEnd();
-
+            console.log('done', currentState.turn);
             return;
         }
         for (const newState of nextStates(currentState)) {
@@ -87,13 +95,14 @@ fs.readFile('./ex.input', (err, data) => {
     }
 
     function addItems(floor, items) {
-        return floor.concat(items).sort((a, b) => b.type.localeCompare(a.type) || a.tech.localeCompare(b.tech))
+        return floor.concat(items).sort((a, b) => b.type - a.type || b.tech - a.tech);
     }
 
     function* nextStates(state) {
         const currentLevel = state.elevator;
         const currentItems = state.floors[currentLevel];
-        const movementOptions = [...allPairs(currentItems)].concat(currentItems.map(x => [x]));
+        const initialOptions = currentLevel === 3 ? [] : [...allPairs(currentItems)];
+        const movementOptions = initialOptions.concat(currentItems.map(x => [x]));
         for (const direction of [-1, 1]) {
             const nextFloor = currentLevel + direction;
             if (nextFloor < 0 || nextFloor > 3) continue;
@@ -116,10 +125,10 @@ fs.readFile('./ex.input', (err, data) => {
     }
 
     function legalFloorState(items) {
-        if (items.every(x => x.tech === 'microchip')) return true;
-        if (items.every(x => x.tech === 'generator')) return true;
-        const res = items.filter(x => x.tech === 'microchip')
-            .map(chip => items.some(gen => gen.tech === 'generator' && gen.type === chip.type))
+        if (items.every(x => x.tech === MICROCHIP)) return true;
+        if (items.every(x => x.tech === GENERATOR)) return true;
+        const res = items.filter(x => x.tech === MICROCHIP)
+            .map(chip => items.some(gen => gen.tech === GENERATOR && gen.type === chip.type))
             .every(x => x);
         return res;
     }
