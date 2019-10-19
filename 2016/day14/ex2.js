@@ -1,7 +1,6 @@
 const fs = require('fs');
 const crypto = require('crypto');
 
-const helper = new Map();
 const multiCache = new Map();
 
 fs.readFile('./ex.input', (err, data) => {
