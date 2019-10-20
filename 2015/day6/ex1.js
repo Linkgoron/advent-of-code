@@ -1,5 +1,5 @@
 const fs = require('fs');
-const crypto = require('crypto');
+
 fs.readFile('./ex.input', (err, data) => {
     if (err) throw new Error("data :(");
     const info = data.toString().split('\r\n').map(x => x.trim()).map(x => x.split(' ')).map(row => ({
