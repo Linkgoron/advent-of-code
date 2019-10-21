@@ -37,8 +37,8 @@ fs.readFile('./ex.input', (err, data) => {
         }
         return length;
     });
-    const min = distances.reduce((acc, cur) => cur > acc ? cur : acc, distances[0]);
-    console.log(min);
+    const max = distances.reduce((acc, cur) => cur > acc ? cur : acc, distances[0]);
+    console.log(max);
 });
 
 function perm(xs) {
