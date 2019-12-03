@@ -1,4 +1,4 @@
-require('fs').readFile('./ex1.input', (err, data) => {
+require('fs').readFile('./ex2.input', (err, data) => {
     const orig = data.toString().trim().split(',').map(x => parseInt(x));
     for (let noun = 0; noun < 100; noun++) {
         for (let verb = 0; verb < 100; verb++) {

@@ -1,4 +1,4 @@
-require('fs').readFile('./ex1.input', (err, data) => {
+require('fs').readFile('./ex2.input', (err, data) => {
     const [first, second] = data.toString().split('\n')
         .map(x => x.split(',').map(x => ({ dir: x[0], amount: parseInt(x.substring(1)) })));
     const locations = new Map();
