@@ -25,8 +25,7 @@ require('fs').readFile('./ex2.input', (err, data) => {
     const me = instances.get('YOU');
     const santa = instances.get('SAN');
 
-    const gcd = [...me.prev].reverse().find(x => santa.prev.includes(x));
-    const gcdPos = me.prev.indexOf(gcd);
+    const gcdPos = me.prev.findIndex((x, i) => santa.prev[i + 1] !== me.prev[i + 1]);
     const meDist = me.prev.length - gcdPos;
     const sanDist = santa.prev.length - gcdPos;
     const solution = meDist + sanDist - 2;
