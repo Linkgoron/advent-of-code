@@ -7,7 +7,7 @@ require('fs').readFile('./ex2.input', async (err, data) => {
     for (const option of options) {
         const units = setup(option);
         await Promise.all(units.map((x, i) => runProgram(startingState, x, units[(i + 1) % 5])));
-        var finalOutput = await units[0].read();
+        const finalOutput = await units[0].read();
         if (max === undefined || max < finalOutput) {
             max = finalOutput;
             maxConfig = [...option];
@@ -39,8 +39,8 @@ async function runProgram(startingState, input, output) {
         if (command === 99) {
             return;
         }
-        var modeString = [...Math.floor(totalCommand / 100).toString()].reverse()
-        var modes = [parseInt(modeString[0] || '0'), parseInt(modeString[1] || '0'), parseInt(modeString[2] || '0')]
+        const modeString = [...Math.floor(totalCommand / 100).toString()].reverse()
+        const modes = [parseInt(modeString[0] || '0'), parseInt(modeString[1] || '0'), parseInt(modeString[2] || '0')]
 
         function fetchValue(mode, value, memory) {
             return mode === 1 ? value : memory[value];
@@ -48,14 +48,14 @@ async function runProgram(startingState, input, output) {
 
         switch (command) {
             case 1: {
-                var left = fetchValue(modes[0], state[inst++], state);
-                var right = fetchValue(modes[1], state[inst++], state);
+                const left = fetchValue(modes[0], state[inst++], state);
+                const right = fetchValue(modes[1], state[inst++], state);
                 state[state[inst]] = left + right;
                 continue
             }
             case 2: {
-                var left = fetchValue(modes[0], state[inst++], state);
-                var right = fetchValue(modes[1], state[inst++], state);
+                const left = fetchValue(modes[0], state[inst++], state);
+                const right = fetchValue(modes[1], state[inst++], state);
                 state[state[inst]] = left * right;
                 continue
             }
@@ -64,33 +64,33 @@ async function runProgram(startingState, input, output) {
                 continue;
             }
             case 4: {
-                var out = fetchValue(modes[0], state[inst], state);
+                const out = fetchValue(modes[0], state[inst], state);
                 output.write(out);
                 continue;
             }
             case 5: {
-                var first = fetchValue(modes[0], state[inst++], state);
+                const first = fetchValue(modes[0], state[inst++], state);
                 if (first !== 0) {
                     inst = fetchValue(modes[1], state[inst], state) - 1;
                 }
                 continue;
             }
             case 6: {
-                var first = fetchValue(modes[0], state[inst++], state);
+                const first = fetchValue(modes[0], state[inst++], state);
                 if (first === 0) {
                     inst = fetchValue(modes[1], state[inst], state) - 1;
                 }
                 continue;
             }
             case 7: {
-                var first = fetchValue(modes[0], state[inst++], state);
-                var second = fetchValue(modes[1], state[inst++], state);
+                const first = fetchValue(modes[0], state[inst++], state);
+                const second = fetchValue(modes[1], state[inst++], state);
                 state[state[inst]] = first < second ? 1 : 0;
                 continue;
             }
             case 8: {
-                var first = fetchValue(modes[0], state[inst++], state);
-                var second = fetchValue(modes[1], state[inst++], state);
+                const first = fetchValue(modes[0], state[inst++], state);
+                const second = fetchValue(modes[1], state[inst++], state);
                 state[state[inst]] = first === second ? 1 : 0;
                 continue;
             }
