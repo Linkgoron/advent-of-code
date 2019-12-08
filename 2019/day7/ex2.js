@@ -17,13 +17,13 @@ require('fs').readFile('./ex2.input', async (err, data) => {
 });
 
 function setup(phaseSetting) {
-    let units = [];
-    units.push(new IOUnit([phaseSetting[0], 0]));
-    units.push(new IOUnit([phaseSetting[1]]));
-    units.push(new IOUnit([phaseSetting[2]]));
-    units.push(new IOUnit([phaseSetting[3]]));
-    units.push(new IOUnit([phaseSetting[4]]));
-    return units;
+    return [
+        new IOUnit([phaseSetting[0], 0]),
+        new IOUnit([phaseSetting[1]]),
+        new IOUnit([phaseSetting[2]]),
+        new IOUnit([phaseSetting[3]]),
+        new IOUnit([phaseSetting[4]])
+    ];
 }
 
 async function runProgram(startingState, input, output) {
