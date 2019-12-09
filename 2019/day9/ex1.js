@@ -26,23 +26,27 @@ async function runProgram(startingState, input, output) {
                     (memory[relative + value] || 0);
         }
 
+        function getWritePosition(mode, value, memory) {
+            return mode === 0 ? memory[value] : (memory[inst] + relative);
+        }
+
         switch (command) {
             case 1: {
                 const left = fetchValue(modes[0], state[inst++], state);
                 const right = fetchValue(modes[1], state[inst++], state);
-                const writePos = modes[2] === 0 ? state[inst] : (state[inst]+relative);
+                const writePos = getWritePosition(modes[2], inst, state);
                 state[writePos] = left + right;
                 continue
             }
             case 2: {
                 const left = fetchValue(modes[0], state[inst++], state);
                 const right = fetchValue(modes[1], state[inst++], state);
-                const writePos = modes[2] === 0 ? state[inst] : (state[inst]+relative);
+                const writePos = getWritePosition(modes[2], inst, state);
                 state[writePos] = left * right;
                 continue
             }
             case 3: {
-                const writePos = modes[0] === 0 ? state[inst] : (state[inst]+relative);
+                const writePos = getWritePosition(modes[0], inst, state);
                 state[writePos] = await input.read();
                 continue;
             }
@@ -68,14 +72,14 @@ async function runProgram(startingState, input, output) {
             case 7: {
                 const first = fetchValue(modes[0], state[inst++], state);
                 const second = fetchValue(modes[1], state[inst++], state);
-                const writePos = modes[2] === 0 ? state[inst] : (state[inst]+relative);
+                const writePos = getWritePosition(modes[2], inst, state);
                 state[writePos] = first < second ? 1 : 0;
                 continue;
             }
             case 8: {
                 const first = fetchValue(modes[0], state[inst++], state);
                 const second = fetchValue(modes[1], state[inst++], state);
-                const writePos = modes[2] === 0 ? state[inst] : (state[inst]+relative);
+                const writePos = getWritePosition(modes[2], inst, state);
                 state[writePos] = first === second ? 1 : 0;
                 continue;
             }
