@@ -1,75 +1,78 @@
-require('fs').readFile('./ex2.input', async (err, data) => {
-    const rows = data.toString().trim().split('\n');
-    const comets = rows.map((row, y) => row.split('').map((point, x) =>
+require('fs').readFile('./ex2.input', (err, data) => {
+    const comets = data.toString().split('\n').map((row, y) => row.split('').map((point, x) =>
         ({
             text: point,
             x, y
         })
     )).flat().filter(x => x.text === '#');
-    const neighbours = comets.map(comet => ({
-        comet,
-        sees: new Set(comets.map(point => buildLine(comet.x, comet.y, point.x, point.y))).size - 1
-    }));
-    const source = [...neighbours].sort((a, b) => b.sees - a.sees)[0];
-    source.closest = new Map();
-    for (const comet of comets) {
-        if (comet === source.comet) continue;
-        const line = buildLine(source.comet.x, source.comet.y, comet.x, comet.y);
-        if (!source.closest.has(line)) {
-            source.closest.set(line, comet);
-        } else {
-            const prev = source.closest.get(line);
-            const prevDist = Math.pow(prev.x - source.comet.x, 2) + Math.pow(prev.y - source.comet.y, 2);
-            const dist = Math.pow(comet.x - source.comet.x, 2) + Math.pow(comet.y - source.comet.y, 2);
-            if (dist < prevDist) {
-                source.closest.set(line, comet);
+    const visibilityMap = buildVisibilityMap(comets);
+    const source = [...visibilityMap].sort((a, b) => b.seen.size - a.seen.size)[0];
+    let alreadyFound = 0;
+    const aliveComets = new Set(comets);
+    const whichToFind = 200;
+    while (alreadyFound < whichToFind) {
+        const cometVisibilityMap = buildCometVisibility(source.comet, aliveComets);
+        if (cometVisibilityMap.size === 0) {
+            console.log('no more to destroy');
+            return;
+        }
+        const items = [...cometVisibilityMap.entries()].map(([line, { point }]) => {
+            const [m, dir] = line.split(',');
+            return {
+                m,
+                target: point,
+                half: dir === 'after' ? 1 : 2
+            }
+        }).sort(sorter);
+
+        const found = cometVisibilityMap.size;
+        if (alreadyFound + found >= whichToFind) {
+            const selected = items[whichToFind - alreadyFound - 1];
+            console.log(selected, (selected.target.x * 100 + selected.target.y))
+            return;
+        }
+        for (const { point } of cometVisibilityMap.values()) {
+            if (aliveComets.has(point)) {
+                aliveComets.delete(point);
             }
         }
+        alreadyFound += found;
     }
-    const items = [...source.closest.entries()].map(([line, value]) => {
-        const [m, dir] = line.split(',')
-        return {
-            m,
-            target: value,
-            quadrant: getQuadrant(dir)
-        }
-    }).sort(sorter);
-    const selected = items[199];
-    console.log(source.comet);
-    console.log(selected, (selected.target.x * 100 + selected.target.y))
 });
 
-function buildLine(x0, y0, x, y) {
-    const line = {
-        m: (y0 - y) / (x0 - x),
-        direction: lineDir(x0, y0, x, y)
+function buildVisibilityMap(comets) {
+    return comets.map(comet => ({
+        comet,
+        seen: buildCometVisibility(comet, comets)
+    }));
+}
+function buildCometVisibility(comet, comets) {
+    const seen = new Map();
+    for (const point of comets) {
+        if (comet === point) continue;
+        let dist = (point.x - comet.x) ** 2 + (point.y - comet.y) ** 2;
+        let line = buildLine(comet.x, comet.y, point.x, point.y);
+        if (!seen.has(line)) {
+            seen.set(line, { point, dist });
+            continue;
+        }
+
+        const { dist: prevDist } = seen.get(line);
+        if (dist < prevDist) {
+            seen.set(line, { point, dist });
+        }
     }
-
-    return `${line.m},${line.direction}`;
+    return seen;
 }
 
-function lineDir(x0, y0, x, y) {
-    let dirs = [];
-    if (y0 > y) dirs.push('up');
-    if (y0 < y) dirs.push('down');
-    if (x0 > x) dirs.push('left');
-    if (x0 < x) dirs.push('right');
-    return dirs.join(' ');
-}
-
-function getQuadrant(dir) {
-    if (dir === 'up') return 1;
-    if (dir === 'right') return 2;
-    if (dir === 'down') return 3;
-    if (dir === 'left') return 4;
-    const [vertical, horizontal] = dir.split(' ');
-    if (vertical === 'up') return horizontal === 'left' ? 4 : 1;
-    if (vertical === 'down') return horizontal === 'left' ? 3 : 2;
-    throw new Error('bad direction' + dir);
+function buildLine(x0, y0, x, y) {
+    const m = (y0 - y) / (x0 - x);
+    const direction = x0 === x ? ((y0 < y) ? 'after' : 'before') : x0 < x ? 'after' : 'before';
+    return `${m},${direction}`;
 }
 
 function sorter(a, b) {
-    if (a.quadrant !== b.quadrant) return a.quadrant - b.quadrant;
+    if (a.half !== b.half) return a.half - b.half;
     if (!isFinite(a.m)) {
         return -1;
     };
