@@ -35,7 +35,6 @@ require('fs').readFile('./ex.input', (err, data) => {
 
     let state = new Map([['total', 0]]);
     state.set('FUEL', 1);
-    goToSource(state, rules);
     goToSource(state, rules, depth);
     console.log(state.get('ORE'));
 
