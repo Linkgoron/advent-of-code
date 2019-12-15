@@ -1,8 +1,27 @@
 require('fs').readFile('./ex.input', (err, data) => {
-    const startingState = data.toString().trim().split(',').map(x => parseInt(x))
+    const startingState = data.toString().trim().split(',').map(x => parseInt(x));
     const robot = new RobotModule();
-    // works by chance, actually needs BFS.
     runProgram(startingState, robot, robot);
+    const point = `${0},${0}`;
+    const visited = new Set([point]);
+    const toVisit = new Set([{ point, steps: 0 }]);
+
+    for (const { point: curPoint, steps } of toVisit) {
+        const [x, y] = curPoint.split(',').map(Number);
+        for (const dir of Object.values(Directions)) {
+            const { pos, isWall, shape } = robot.getElementInDirection({ x, y }, dir, robot.state);
+            if (!isWall) {
+                if (shape === 'x') {
+                    console.log(steps + 1);
+                    break;
+                }
+                if (!visited.has(`${pos.x},${pos.y}`)) {
+                    visited.add(`${pos.x},${pos.y}`)
+                    toVisit.add({ point: `${pos.x},${pos.y}`, steps: steps + 1 });
+                }
+            }
+        }
+    }
 });
 
 function runProgram(startingState, input, output) {
@@ -131,7 +150,6 @@ class RobotModule {
         if (value === 1) {
             this.state.set(`${pos.x},${pos.y}`, '.');
         } else {
-            console.log(sourceState.steps + 1);
             this.state.set(`${pos.x},${pos.y}`, 'x');
         }
     }
@@ -202,7 +220,10 @@ class RobotModule {
                 break;
             }
         }
-        return { pos: toGo, isKnown: this.state.has(`${toGo.x},${toGo.y}`) };
+        const shape = this.state.get(`${toGo.x},${toGo.y}`);
+        const isWall = shape === '#';
+        const isKnown = this.state.has(`${toGo.x},${toGo.y}`);
+        return { pos: toGo, isKnown, isWall, shape };
     }
 
     printScreen() {
