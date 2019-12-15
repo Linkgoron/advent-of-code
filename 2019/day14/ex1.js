@@ -33,34 +33,25 @@ require('fs').readFile('./ex.input', (err, data) => {
         }
     }
 
-    let state = new Map([['total', 0]]);
-    state.set('FUEL', 1);
-    goToSource(state, rules, depth);
+    let state = goToSource(new Map([['FUEL', 1]]), rules, depth);
     console.log(state.get('ORE'));
 
     function relevantRules(rules, state, depths) {
-        if (!depths) {
-            return rules.map(toExecute => canReverseRule(toExecute, state))
-                .filter(x => x.good);
-        }
-
-        const curDepths = [...state].filter(([type, amount]) => type !== 'ORE' && type !== 'total' && amount > 0)
-            .map(([type, amount]) => depth.get(type));
-        const allowedDepth = Math.max(...curDepths);
-        return rules.filter(x => depths.get(x.output.type) === allowedDepth)
-            .map(toExecute => canReverseRule(toExecute, state, true))
-            .filter(x => x.good);
+        const allowedDepth = Math.max(...[...state].filter(([type, amount]) => type !== 'ORE' && type !== 'total' && amount > 0)
+            .map(([type, amount]) => depths.get(type)));
+        return rules.filter(rule => canReverse(rule, state, depths, allowedDepth)).map(toExecute => reverseRule(toExecute, state, true))
     }
 
-    function canReverseRule(rule, state, allowedAnyway) {
-        const hasAmount = state.get(rule.output.type) || 0;
-        if (!allowedAnyway || hasAmount >= rule.output.amount) {
-            const good = hasAmount >= rule.output.amount;
-            const amount = Math.floor(hasAmount / rule.output.amount);
-            return { good, amount, rule };
-        }
+    function canReverse(rule, state, depths, allowedDepth) {
+        return state.get(rule.output.type) > 0
+            && (depths.get(rule.output.type) === allowedDepth || state.get(rule.output.type) >= rule.output.amount);
+    }
 
-        return { good: hasAmount > 0, amount: hasAmount > 0 ? 1 : 0, rule };
+    function reverseRule(rule, state) {
+        const hasAmount = state.get(rule.output.type) || 0;
+        return hasAmount >= rule.output.amount
+            ? { amount: Math.floor(hasAmount / rule.output.amount), rule }
+            : { amount: 1, rule };
     }
 
     function computePreviousState(rule, state, ruleAmount) {

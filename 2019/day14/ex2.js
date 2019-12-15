@@ -33,52 +33,40 @@ require('fs').readFile('./ex.input', (err, data) => {
         }
     }
 
-
-    const wat = 1000000000000;
+    const allowedOre = 1000000000000;
     let minimumFuel = goToSource(new Map([["FUEL", 1]]), rules, depth);
-    let willHaveAtLeast = Math.floor(wat / minimumFuel.get('ORE'));
-
+    let willHaveAtLeast = Math.floor(allowedOre / minimumFuel.get('ORE'));
     let min = willHaveAtLeast;
-    let max = willHaveAtLeast * 2;
-    while (true) {
-        let current = Math.floor((min + max) / 2);
-        let res = goToSource(new Map([["FUEL", current]]), rules, depth);
-        const leftOver = wat - res.get('ORE');
+    let max = willHaveAtLeast * 100;
+    while (min !== max) {
+        const current = Math.ceil((min + max) / 2);
+        const res = goToSource(new Map([["FUEL", current]]), rules, depth);
+        const leftOver = allowedOre - res.get('ORE');
         if (leftOver < 0) {
-            max = current;
+            max = current - 1;
             continue;
         }
-        if (leftOver > minimumFuel.get('ORE')) {
-            min = current;
-            continue;
-        }
-        console.log(current);
-        return;
+
+        min = current;
     }
+    console.log(min);
 
     function relevantRules(rules, state, depths) {
-        if (!depths) {
-            return rules.map(toExecute => canReverseRule(toExecute, state))
-                .filter(x => x.good);
-        }
-
-        const curDepths = [...state].filter(([type, amount]) => type !== 'ORE' && type !== 'total' && amount > 0)
-            .map(([type, amount]) => depth.get(type));
-        const allowedDepth = Math.max(...curDepths);
-        return rules.filter(x => depths.get(x.output.type) === allowedDepth)
-            .map(toExecute => canReverseRule(toExecute, state, true))
-            .filter(x => x.good);
+        const allowedDepth = Math.max(...[...state].filter(([type, amount]) => type !== 'ORE' && type !== 'total' && amount > 0)
+            .map(([type, amount]) => depths.get(type)));
+        return rules.filter(rule => canReverse(rule, state, depths, allowedDepth)).map(toExecute => reverseRule(toExecute, state, true))
     }
 
-    function canReverseRule(rule, state, allowedAnyway) {
-        const hasAmount = state.get(rule.output.type) || 0;
-        if (!allowedAnyway || hasAmount >= rule.output.amount) {
-            const good = hasAmount >= rule.output.amount;
-            const amount = Math.floor(hasAmount / rule.output.amount);
-            return { good, amount, rule };
-        }
+    function canReverse(rule, state, depths, allowedDepth) {
+        return state.get(rule.output.type) > 0
+            && (depths.get(rule.output.type) === allowedDepth || state.get(rule.output.type) >= rule.output.amount);
+    }
 
-        return { good: hasAmount > 0, amount: hasAmount > 0 ? 1 : 0, rule };
+    function reverseRule(rule, state) {
+        const hasAmount = state.get(rule.output.type) || 0;
+        return hasAmount >= rule.output.amount
+            ? { amount: Math.floor(hasAmount / rule.output.amount), rule }
+            : { amount: 1, rule };
     }
 
     function computePreviousState(rule, state, ruleAmount) {
