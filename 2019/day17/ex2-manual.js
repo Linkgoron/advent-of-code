@@ -1,18 +1,8 @@
 require('fs').readFile('./ex.input', (err, data) => {
     const startingState = data.toString().trim().split(',').map(x => parseInt(x));
+    startingState[0] = 2;
     const robot = new RobotModule();
     runProgram(startingState, robot, robot);
-    let allData = robot.str.split(String.fromCharCode(10)).map((row, rowIndex) => row.split('').map((col, colIndex) => [`${colIndex},${rowIndex}`, col])).flat();
-    let map = new Map(allData.filter(([coordinate, type]) => type !== '.'));
-    let calib = 0;
-    for (let [key, value] of map) {
-        let [x, y] = key.split(',').map(Number);
-        let neighbours = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        if (neighbours.every(([nx, ny]) => map.has(`${x + nx},${y + ny}`))) {
-            calib += x * y;
-        }
-    }
-    console.log(calib);
 });
 
 function runProgram(startingState, input, output) {
@@ -59,7 +49,8 @@ function runProgram(startingState, input, output) {
             }
             case 3: {
                 const writePos = getWritePosition(modes[0], inst, state);
-                state[writePos] = input.read();
+                const readValue = input.read();
+                state[writePos] = readValue;
                 continue;
             }
             case 4: {
@@ -103,15 +94,40 @@ function runProgram(startingState, input, output) {
         }
     }
 }
+
 class RobotModule {
     constructor() {
-        this.state = new Map([[`${0},${0}`, 'S']]);
-        this.str = "";
+        this.inputState = { which: 0, location: 0 };
+        this.inputs = [
+            "A,B,A,B,A,C,A,C,B,C",
+            "R,6,L,10,R,10,R,10",
+            "L,10,L,12,R,10",
+            "R,6,L,12,L,10",
+            "n"
+        ];
     }
 
     write(value) {
-        this.str += String.fromCharCode(value);
+        // code is spamming numbers
+        if (value > 150) {
+            console.log(value);
+        }
     }
 
-    read() {}
+
+    read() {
+        const currentInput = this.inputs[this.inputState.which];
+        if (currentInput.length === this.inputState.location) {
+            this.inputState.which++;
+            this.inputState.location = 0;
+            // new line
+            return 10;
+        }
+        const ret = currentInput.charCodeAt(this.inputState.location++);
+        return ret;
+    }
+
+    inputsDone() {
+        return this.inputState.which === 5;
+    }
 }
