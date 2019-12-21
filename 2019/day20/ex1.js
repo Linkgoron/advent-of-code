@@ -40,16 +40,18 @@ require('fs').readFile('./ex.input', (err, data) => {
 
 function parseMap(map) {
     for (const [key, point] of map) {
+        if (point.char !== '.') continue;
         const options = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        if (point.char !== '.') {
-            for (const [movX, movY] of options) {
-                const res = map.get(`${point.x + movX},${point.y + movY}`);
-                if (res) {
-                    if (res.char !== '.') {
-                        point.portalName = point.char + res.char;
-                    }
-                    if (res.char === '.') {
-                        point.exitAt = `${point.x + movX},${point.y + movY}`;
+        for (const [movX, movY] of options) {
+            const res = map.get(`${point.x + movX},${point.y + movY}`);
+            if (res) {
+                if (res.char !== '.') {
+                    res.exitAt = `${point.x},${point.y}`;
+                    const extraLetter = map.get(`${point.x + movX + movX},${point.y + movY + movY}`);
+                    res.portalName = res.char + extraLetter.char;
+                    // name is top-bottom or left-right
+                    if (movY === -1 || movX === -1) {
+                        res.portalName = extraLetter.char + res.char;
                     }
                 }
             }
@@ -64,8 +66,7 @@ function parseMap(map) {
     for (const [key, item] of map) {
         if (item.portalName) {
             const items = [...map.values()];
-            const meReversed = [...item.portalName].reverse().join('');
-            const match = items.find(other => other !== item && (other.portalName === meReversed || other.portalName === item.portalName));
+            const match = items.find(other => other !== item && (other.portalName === item.portalName));
             if (match) {
                 item.match = match.exitAt;
             }

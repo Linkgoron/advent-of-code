@@ -5,52 +5,65 @@ require('fs').readFile('./ex.input', (err, data) => {
         .flat().filter(([key, x]) => x.char === '.' || (x.char.charCodeAt(0) <= 90 && x.char.charCodeAt(0) >= 65)));
 
     const parsedMap = parseMap(map);
-    let point = [...parsedMap.values()].find(x => x.portalName === 'AA').exitAt;
-    // console.log(parsedMap);
-    const visited = new Set([point + ',0']);
-    const toVisit = new Set([{ point, level: 0, steps: 0 }]);
-    for (const { point: curPoint, steps, level } of toVisit) {
-        const [x, y] = curPoint.split(',').map(Number);
-        const options = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        for (const [movX, movY] of options) {
-            const nextPoint = `${x + movX},${y + movY}`
-            const res = map.get(nextPoint);
-            if (!res) continue;
-
-            if (res.portalName) {
-                if (res.portalName === 'ZZ' && level === 0) {
-                    console.log("DONE", steps);
-                    return;
-                }
-                if (res.portalName === 'AA' || res.portalName === 'ZZ') continue;
-                if (level === 0 && res.isOuter) continue;
-                const nextLevel = res.isInner ? level + 1 : level - 1;
-                if (visited.has(nextPoint + ',' + nextLevel)) continue;
-                toVisit.add({ point: res.match, steps: steps + 1, level: nextLevel });
-                visited.add(res.match + ',' + nextLevel);
-                continue;
-            }
-            if (visited.has(nextPoint + ',' + level)) continue;
-            toVisit.add({ point: nextPoint, steps: steps + 1, level });
-            visited.add(nextPoint + ',' + level);
-
+    const point = `AA:${[...parsedMap.values()].find(x => x.portalName === 'AA').exitAt}`;
+    const { infoMap, distMap } = portalsMap(parsedMap);
+    const visited = new Set();
+    const toVisit = new Map();
+    const travel = new Set([{ point, level: 0, steps: 0 }]);
+    for (const current of travel) {
+        const { point: curPoint, steps, level } = current;
+        if (curPoint.startsWith('ZZ')) {
+            console.log("WINNER", steps - 1);
+            return;
         }
-        // console.log(parsedMap);
-    };
+        travel.delete(current);
+        visited.add(curPoint + "," + level);
+
+        const options = distMap.get(curPoint);
+        for (const [name, dist] of options) {
+            const [portalName, loc] = name.split(':');
+            if (portalName === 'ZZ' && level !== 0) continue;
+            if (portalName === 'AA') continue;
+            const res = infoMap.get(name);
+            const nextLevel = res.isInner ? level + 1 : level - 1;
+            if (nextLevel < 0) continue;
+            const uniqueLabel = `${res.matchName}:${res.match},${nextLevel}`;
+            if (visited.has(uniqueLabel)) continue;
+            const val = toVisit.get(uniqueLabel);
+
+            if (!val || (val.steps < steps + dist + 1)) {
+                const next = { point: `${res.matchName}:${res.match}`, steps: steps + dist + 1, level: nextLevel };
+                toVisit.set(uniqueLabel, next);
+            }
+        }
+        if (toVisit.size) {
+            let curMin = undefined;
+            for (const [key, option] of toVisit) {
+                if (curMin === undefined || option.steps < curMin.dist) {
+                    curMin = { option, dist: option.steps, key }
+                }
+            }
+
+            travel.add(curMin.option);
+            toVisit.delete(curMin.key);
+        }
+    }
+    console.log('done');
 });
 
 function parseMap(map) {
     for (const [key, point] of map) {
+        if (point.char !== '.') continue;
         const options = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        if (point.char !== '.') {
-            for (const [movX, movY] of options) {
-                const res = map.get(`${point.x + movX},${point.y + movY}`);
-                if (res) {
-                    if (res.char !== '.') {
-                        point.portalName = point.char + res.char;
-                    }
-                    if (res.char === '.') {
-                        point.exitAt = `${point.x + movX},${point.y + movY}`;
+        for (const [movX, movY] of options) {
+            const res = map.get(`${point.x + movX},${point.y + movY}`);
+            if (res) {
+                if (res.char !== '.') {
+                    res.exitAt = `${point.x},${point.y}`;
+                    const extraLetter = map.get(`${point.x + movX + movX},${point.y + movY + movY}`);
+                    res.portalName = res.char + extraLetter.char;
+                    if (movY === -1 || movX === -1) {
+                        res.portalName = extraLetter.char + res.char;
                     }
                 }
             }
@@ -74,10 +87,49 @@ function parseMap(map) {
             const match = items.find(other => other !== item && (other.portalName === meReversed || other.portalName === item.portalName));
             if (match) {
                 item.match = match.exitAt;
+                item.matchName = match.portalName;
             }
             item.isOuter = item.x == minX || item.x === maxX || item.y === maxY || item.y === minY;
             item.isInner = !item.isOuter;
+
+            if (item.portalName === 'ZZ') {
+                item.match = item.exitAt;
+                item.matchName = 'ZZ';
+                item.isOuter = false;
+                item.isInner = true;
+            }
         }
     }
     return map;
+}
+
+function portalsMap(map) {
+    let portals = [...map.values()].filter(b => b.portalName);
+    const distMap = new Map(portals.map(x => [`${x.portalName}:${x.exitAt}`, BFS(x.exitAt, map)]));
+    const infoMap = new Map(portals.map(x => [`${x.portalName}:${x.exitAt}`, x]));
+    return { distMap, infoMap };
+}
+
+function BFS(point, map) {
+    const visited = new Set([point]);
+    const toVisit = new Set([{ point, steps: 0 }]);
+    const portalMap = new Map();
+    for (const { point: curPoint, steps } of toVisit) {
+        const [x, y] = curPoint.split(',').map(Number);
+        const options = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        for (const [movX, movY] of options) {
+            const nextPoint = `${x + movX},${y + movY}`
+            if (visited.has(nextPoint)) continue;
+            const res = map.get(nextPoint);
+            if (!res) continue;
+            if (res.portalName && steps > 0) {
+                portalMap.set(`${res.portalName}:${res.exitAt}`, steps);
+                continue;
+            }
+
+            toVisit.add({ point: nextPoint, steps: steps + 1 });
+            visited.add(nextPoint);
+        }
+    };
+    return portalMap;
 }
