@@ -1,4 +1,3 @@
-
 require('fs').readFile('./ex.input', (err, data) => {
     const map = new Map(data.toString().split('\n')
         .map((row, rowIndex) => row.split('').map((char, colIndex) => [`${colIndex},${rowIndex}`, { x: colIndex, y: rowIndex, char }]))
@@ -6,11 +5,9 @@ require('fs').readFile('./ex.input', (err, data) => {
 
     const parsedMap = parseMap(map);
     let point = [...parsedMap.values()].find(x => x.portalName === 'AA').exitAt;
-    // console.log(parsedMap);
     const visited = new Set([point]);
     const toVisit = new Set([{ point, steps: 0 }]);
     for (const { point: curPoint, steps } of toVisit) {
-        // console.log(curPoint, steps);
         const [x, y] = curPoint.split(',').map(Number);
         const options = [[1, 0], [-1, 0], [0, 1], [0, -1]];
         for (const [movX, movY] of options) {
@@ -25,16 +22,13 @@ require('fs').readFile('./ex.input', (err, data) => {
                     return;
                 }
                 if (res.portalName === 'AA') continue;
-                // console.log('EA', res.portalName, res.exitAt);
                 toVisit.add({ point: res.match, steps: steps + 1 });
                 visited.add(res.match);
                 continue;
             }
             toVisit.add({ point: nextPoint, steps: steps + 1 });
             visited.add(nextPoint);
-
         }
-        // console.log(parsedMap);
     };
 });
 

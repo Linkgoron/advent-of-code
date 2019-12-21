@@ -1,4 +1,3 @@
-
 require('fs').readFile('./ex.input', (err, data) => {
     const map = new Map(data.toString().split('\n')
         .map((row, rowIndex) => row.split('').map((char, colIndex) => [`${colIndex},${rowIndex}`, { x: colIndex, y: rowIndex, char }]))
@@ -48,7 +47,6 @@ require('fs').readFile('./ex.input', (err, data) => {
             toVisit.delete(curMin.key);
         }
     }
-    console.log('done');
 });
 
 function parseMap(map) {
