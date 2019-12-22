@@ -150,7 +150,7 @@ class LinkedList {
     }
 
     printIndex(val) {
-        let next = this.head.next;
+        let next = this.head;
         let pos = 0;
         while (next.value !== val) {
             pos++;
