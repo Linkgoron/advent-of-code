@@ -101,6 +101,7 @@ class LinkedList {
     }
 
     increment(inc) {
+        
         let pos = this.head;
         // head stays in place.
         const curValues = this.orderedValues();
