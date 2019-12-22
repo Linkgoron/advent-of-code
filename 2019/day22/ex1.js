@@ -25,7 +25,6 @@ require('fs').readFile('./ex.input', (err, data) => {
         list.add(i);
     }
     for (const command of commands) {
-        list.hasDup();
         if (command.command === 'cut') {
             list.cut(command.count);
         }
@@ -35,10 +34,10 @@ require('fs').readFile('./ex.input', (err, data) => {
         if (command.command === 'new') {
             list.newStack();
         }
-        list.print();
-
+        list.hasDup();
     }
-    list.printVal(2019);
+    list.print();
+    list.printIndex(2019);
 });
 
 class LinkedNode {
@@ -150,11 +149,13 @@ class LinkedList {
         }
     }
 
-    printVal(index) {
-        let next = this.head;
-        for (let curIndex = 0; curIndex < index; curIndex++) {
+    printIndex(val) {
+        let next = this.head.next;
+        let pos = 0;
+        while (next.value !== val) {
+            pos++;
             next = next.next;
         }
-        console.log(next.value)
+        console.log(pos);
     }
 }
