@@ -21,7 +21,7 @@ require('fs').readFile('./ex.input', (err, data) => {
         });
 
     const list = new LinkedList(0);
-    for (let i = 1; i < 1007; i++) {
+    for (let i = 1; i < 10007; i++) {
         list.add(i);
     }
     for (const command of commands) {
@@ -35,12 +35,10 @@ require('fs').readFile('./ex.input', (err, data) => {
         if (command.command === 'new') {
             list.newStack();
         }
-        console.log(command);
         list.print();
 
     }
-    list.print();
-    list.printVal(9);
+    list.printVal(2019);
 });
 
 class LinkedNode {
@@ -101,7 +99,7 @@ class LinkedList {
     }
 
     increment(inc) {
-        
+
         let pos = this.head;
         // head stays in place.
         const curValues = this.orderedValues();
