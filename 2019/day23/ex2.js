@@ -169,13 +169,8 @@ class Governor {
         this.map = new Map();
         this.tried = new Set();
         this.nat = undefined;
-        this.triedToRead = 0;
         this.lastNatMessage = undefined;
         this.finished = false;
-    }
-
-    resetRead() {
-        this.triedToRead = 0;
     }
 
     allIdle() {
