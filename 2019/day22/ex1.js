@@ -20,153 +20,46 @@ require('fs').readFile('./ex.input', (err, data) => {
             }
         });
 
-    const list = new LinkedList(0);
-    for (let i = 1; i < 119315717514047; i++) {
-        list.add(i);
-    }
-    for (let times = 0; times < 101741582076661; times++) {
-        console.log('command',times);
-        for (const command of commands) {            
-            if (command.command === 'cut') {
-                list.cut(command.count);
-            }
-            if (command.command === 'increment') {
-                list.increment(command.count);
-            }
-            if (command.command === 'new') {
-                list.newStack();
-            }
-            list.hasDup();
+    const deckSize = 10007;
+    const stack = new SingleStack(2019, deckSize);
+    for (const command of commands) {
+        if (command.command === 'cut') {
+            stack.cut(command.count);
+        }
+        if (command.command === 'increment') {
+            stack.increment(command.count);
+        }
+        if (command.command === 'new') {
+            stack.newStack();
         }
     }
-    list.print();
-    list.printVal(2019);
+    console.log(stack.currentPosition % deckSize)
 });
 
-class LinkedNode {
-    constructor(value) {
-        this.next = null;
-        this.prev = null;
-        this.value = value;
-    }
-}
-
-class LinkedList {
-    constructor(initial) {
-        this.head = new LinkedNode(initial)
-        this.head.next = this.head;
-        this.head.prev = this.head;
-        this.count = 1;
-    }
-
-    add(value) {
-        this.count++;
-        const toAdd = new LinkedNode(value);
-        const curLast = this.head.prev;
-        toAdd.next = this.head;
-        toAdd.prev = curLast;
-        curLast.next = toAdd
-        this.head.prev = toAdd;
+class SingleStack {
+    constructor(toFollow, total) {
+        this.toFollow = toFollow;
+        this.currentPosition = toFollow;
+        this.total = total;
     }
 
     newStack() {
-        let cur = this.head.next;
-        while (cur !== this.head) {
-            const curNext = cur.next;
-            const curPrev = cur.prev
-            cur.next = curPrev;
-            cur.prev = curNext;
-            cur = curNext;
-        }
-        const curHeadPrev = this.head.prev;
-        this.head.prev = this.head.next;
-        this.head.next = curHeadPrev;
-        this.head = curHeadPrev
+        this.currentPosition = this.total - this.currentPosition - 1;
     }
 
     cut(val) {
-        if (val >= 0) {
-            let newStart = this.head;
-            for (let i = 0; i < val; i++) {
-                newStart = newStart.next;
-            }
-            this.head = newStart;
+        val = val < 0 ? (this.total + val) : val;
+        const move = val % this.total;
+        if (this.currentPosition < move) {
+            const staying = this.total - move;
+            this.currentPosition = staying + this.currentPosition;
         } else {
-            let newStart = this.head;
-            for (let i = 0; i < Math.abs(val); i++) {
-                newStart = newStart.prev;
-            }
-            this.head = newStart;
+            this.currentPosition = this.currentPosition - move;
         }
     }
 
     increment(inc) {
-
-        let pos = this.head;
-        // head stays in place.
-        const curValues = this.orderedValues();
-        pos.value = curValues[0];
-        for (let i = 1; i < this.count; i++) {
-            for (let j = 0; j < inc; j++) {
-                pos = pos.next;
-            }
-            pos.value = curValues[i];
-        }
-    }
-
-    orderedValues() {
-        const values = [];
-        values.push(this.head.value);
-        let next = this.head.next;
-        while (next !== this.head) {
-            values.push(next.value);
-            next = next.next;
-        }
-        return values;
-    }
-
-    print() {
-        const values = [];
-        values.push(this.head.value)
-        let next = this.head.next;
-        while (next !== this.head) {
-            values.push(next.value);
-            next = next.next;
-        }
-        console.log(values);
-    }
-
-    hasDup() {
-        const values = new Map();
-        values.set(this.head.value, 0)
-        let cur = this.head.next;
-        let i = 1;
-        while (cur !== this.head) {
-            if (values.has(cur.value)) {
-                console.log("ERR", cur.value, i, values.get(cur.value));
-                throw new Error();
-            }
-            i++
-            values.set(cur.value, i);
-            cur = cur.next;
-        }
-    }
-
-    printIndex(val) {
-        let next = this.head;
-        for (let pos = 0; pos < 2020; pos++) {
-            next = next.next;
-        }
-        console.log(next.value);
-    }
-
-    printVal(val) {
-        let next = this.head;
-        let pos = 0;
-        while (next.value !== val) {
-            pos++;
-            next = next.next;
-        }
-        console.log(pos);
+        const newPos = (inc * this.currentPosition) % this.total;
+        this.currentPosition = newPos;
     }
 }

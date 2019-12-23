@@ -4,13 +4,13 @@ require('fs').readFile('./ex.input', (err, data) => {
             if (row[0] === 'cut') {
                 return {
                     command: 'cut',
-                    count: Number(row[1])
+                    count: BigInt(row[1])
                 }
             }
             if (row[1] === 'with') {
                 return {
                     command: 'increment',
-                    count: Number(row[3])
+                    count: BigInt(row[3])
                 }
             }
 
@@ -19,25 +19,70 @@ require('fs').readFile('./ex.input', (err, data) => {
             }
         });
 
-    let init = 0;
-    let deckSize = 119315717514047;
-    let steps = 101741582076661;
-    // const forw = new SingleStack(init, deckSize);
-    // execute(forw, commands);
-    const back = new SingleStack(init, deckSize);
-    const reverseCommands = commands.reverse();
-    execute(back, reverseCommands);
-    for (let trn = 0; trn < steps; trn++) {
-        if (trn % 100000 === 0) {
-            console.log(trn, steps - trn);
-        }
-        if (back.currentPosition === 2020) {
-            console.log("OMGGGGGGGGGGGGGGGGG", trn)
-        }
-        execute(back, reverseCommands);
+    let deckSize = 119315717514047n
+    const forw = new OppositeStack(0n, deckSize);
+    const forw2 = new OppositeStack(1n, deckSize);
+    const revCommands = commands.reverse();
+    execute(forw, revCommands, deckSize);
+    execute(forw2, revCommands, deckSize);    
+    const diff = forw2.currentPosition - forw.currentPosition % deckSize;
+    console.log(`function is:${forw.currentPosition}+x*${diff} mod ${deckSize}`);
+    const func = new Func(forw.currentPosition, diff, deckSize);
+    const times = 101741582076661n;
+    const bitRep = times.toString(2);
+    let map = new Map();
+    let allFunc = func;
+    map.set(0, allFunc);
+    for (let i = 1; i < bitRep.length; i++) {
+        allFunc = allFunc.composeSelf();
+        map.set(i, allFunc.clone());
     }
-    console.log('hi');
+    var bitRepArr = bitRep.split('').reverse();
+    let full = undefined;
+    for (let i = 0; i < bitRep.length; i++) {
+        if (bitRepArr[i] === '1') {
+            if (full === undefined) {
+                full = map.get(i).clone();
+            } else {
+                full = full.compose(map.get(i));
+            }
+        }
+    }
+    console.log((full.compute(2020n) + deckSize) % deckSize);
 });
+
+class Func {
+    constructor(init, diff, mod) {
+        this.init = BigInt(init) % BigInt(mod);
+        this.diff = BigInt(diff) % BigInt(mod);
+        this.mod = BigInt(mod);
+    }
+
+    compute(x) {
+        return (this.init + this.diff * BigInt(x)) % this.mod;
+    }
+
+    composeSelf() {
+        return this.compose(this);
+    }
+
+    compose(other) {
+        if (other.mod !== this.mod) {
+            throw new Error("same mod only");
+        }
+        let newInit = (this.init + other.init * this.diff) % this.mod;
+        let newDiff = (this.diff * other.diff) % this.mod
+        return new Func(newInit, newDiff, this.mod);
+    }
+
+    toString() {
+        return `${this.init} + ${this.diff}*x mod ${this.mod}`;
+    }
+
+    clone() {
+        return new Func(this.init, this.diff, this.mod);
+    }
+}
 
 function execute(stack, commands) {
     for (const command of commands) {
@@ -54,34 +99,6 @@ function execute(stack, commands) {
     return stack;
 }
 
-class SingleStack {
-    constructor(toFollow, total) {
-        this.toFollow = toFollow;
-        this.currentPosition = toFollow;
-        this.total = total;
-    }
-
-    newStack() {
-        this.currentPosition = this.total - this.currentPosition - 1;
-    }
-
-    cut(val) {
-        val = val < 0 ? (this.total + val) : val;
-        const move = val % this.total;
-        if (this.currentPosition < move) {
-            const staying = this.total - move;
-            this.currentPosition = staying + this.currentPosition;
-        } else {
-            this.currentPosition = this.currentPosition - move;
-        }
-    }
-
-    increment(inc) {
-        const newPos = (inc * this.currentPosition) % this.total;
-        this.currentPosition = newPos;
-    }
-}
-
 class OppositeStack {
     constructor(toFollow, total) {
         this.toFollow = toFollow;
@@ -90,12 +107,12 @@ class OppositeStack {
     }
 
     newStack() {
-        this.currentPosition = this.total - this.currentPosition - 1;
+        this.currentPosition = this.total - this.currentPosition - 1n;
     }
 
     cut(val) {
-        val = -1 * val;
-        val = val < 0 ? (this.total + val) : val;
+        val = this.total - val;
+        val = val < 0n ? (this.total + val) : val;
         const move = val % this.total;
         if (this.currentPosition < move) {
             const staying = this.total - move;
@@ -106,12 +123,13 @@ class OppositeStack {
     }
 
     increment(delta) {
-        let pos = 0;
-        let i = 0;
-        const toMul = Math.ceil(this.total / delta);
+        let pos = 0n;
+        let i = 0n;
+        const ceil = this.total % delta === 0 ? 0n : 1n;
+        const toMul = (this.total / delta) + ceil;
         while (pos !== this.currentPosition) {
             const diff = this.currentPosition - pos;
-            if (diff % delta === 0) {
+            if (diff % delta === 0n) {
                 const stepDelta = diff / delta;
                 this.currentPosition = i + stepDelta;
                 return;
@@ -119,10 +137,6 @@ class OppositeStack {
             pos = (pos + delta * toMul) % this.total;
             i += toMul;
         }
-        this.currentPosition = i;
+        throw new Error();
     }
 }
-
-this.init + this.diff*(other.diff*x+other.init)
-= this.init+other.init*this.diff+
-this.diff*other.diff * x
