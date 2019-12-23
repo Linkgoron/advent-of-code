@@ -167,6 +167,7 @@ class IOUnit {
 class Governor {
     constructor() {
         this.map = new Map();
+        this.tried = new Set();
         this.nat = undefined;
         this.triedToRead = 0;
         this.lastNatMessage = undefined;
@@ -183,10 +184,10 @@ class Governor {
 
     pushNat() {
         if (!this.allIdle()) {
-            this.triedToRead = 0;
+            this.tried.clear();
             return;
         }
-        if (this.triedToRead >= 1000) {
+        if (this.tried.size === 50) {
             if (!this.map.has(0) === undefined) {
                 this.map.set(0, []);
             }
@@ -195,7 +196,7 @@ class Governor {
                 this.finished = true;
             }
             this.lastNatMessage = this.nat;
-            this.triedToRead = 0;
+            this.tried.clear();
         }
     }
 
@@ -204,6 +205,7 @@ class Governor {
             this.nat = message;
             return;
         }
+        this.tried.clear();
         if (!this.map.has(address)) {
             this.map.set(address, []);
         }
@@ -216,7 +218,7 @@ class Governor {
         }
         const doesntHaveValue = this.map.get(address).length === 0;
         if (doesntHaveValue) {
-            this.triedToRead++;
+            this.tried.add(address);
             return undefined;
         }
 
