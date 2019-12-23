@@ -4,13 +4,13 @@ require('fs').readFile('./ex.input', (err, data) => {
             if (row[0] === 'cut') {
                 return {
                     command: 'cut',
-                    count: Number(row[1])
+                    count: BigInt(row[1])
                 }
             }
             if (row[1] === 'with') {
                 return {
                     command: 'increment',
-                    count: Number(row[3])
+                    count: BigInt(row[3])
                 }
             }
 
@@ -18,26 +18,35 @@ require('fs').readFile('./ex.input', (err, data) => {
                 command: 'new'
             }
         });
-
-    let init = 2020;
-    let deckSize = 119315717514047;
-    let steps = 101741582076661;
-    // const forw = new SingleStack(init, deckSize);
-    // execute(forw, commands);
-    const back = new SingleStack(init, deckSize);
-    const reverseCommands = commands.reverse();
-    execute(back, reverseCommands);
-    for (let trn = 0; trn < steps; trn++) {
-        if (trn % 100000 === 0) {
-            console.log(trn, steps - trn);
-        }
-        if (back.currentPosition === 2020) {
-            console.log("OMGGGGGGGGGGGGGGGGG", trn)
-        }
-        execute(back, reverseCommands);
+    let deckSize = 119315717514047n;
+    let locStart = 111543024099186n;
+    let locAmount = 5n;
+    const forw = new SingleStack(locStart, deckSize);
+    const forw2 = new SingleStack(locStart + 1n, deckSize);
+    execute(forw, commands, deckSize);
+    execute(forw2, commands, deckSize);
+    let diff = forw2.currentPosition - forw.currentPosition;
+    console.log(`${forw.currentPosition}+x*${diff} mod ${deckSize}`);
+    for (let location = locStart; location < locStart + locAmount; location++) {
+        const tester = new SingleStack(location, deckSize);
+        execute(tester, commands, deckSize);
+        const diffPos = (location - locStart) * diff;
+        const val = (forw.currentPosition + diffPos) % deckSize;
+        console.log(val, tester.currentPosition, val - tester.currentPosition === 0n);
     }
-    console.log('hi');
+
+    // 0 -> 10529902731202
+    // 1 -> 10529902731202 + 91332517246274
+    // 2 -> (10529902731202 + 91332517246274 * 2) % 119315717514047
 });
+
+function prnt(curPos, prevPos, deckSize) {
+    if (curPos > prevPos) {
+        console.log(prevPos, curPos, curPos - prevPos)
+    } else {
+        console.log(prevPos, curPos, deckSize + curPos - prevPos)
+    }
+}
 
 function execute(stack, commands) {
     for (const command of commands) {
@@ -62,11 +71,11 @@ class SingleStack {
     }
 
     newStack() {
-        this.currentPosition = this.total - this.currentPosition - 1;
+        this.currentPosition = this.total - this.currentPosition - 1n;
     }
 
     cut(val) {
-        val = val < 0 ? (this.total + val) : val;
+        val = val < 0n ? (this.total + val) : val;
         const move = val % this.total;
         if (this.currentPosition < move) {
             const staying = this.total - move;

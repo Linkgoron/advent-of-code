@@ -21,23 +21,26 @@ require('fs').readFile('./ex.input', (err, data) => {
         });
 
     const list = new LinkedList(0);
-    for (let i = 1; i < 10007; i++) {
+    for (let i = 1; i < 119315717514047; i++) {
         list.add(i);
     }
-    for (const command of commands) {
-        if (command.command === 'cut') {
-            list.cut(command.count);
+    for (let times = 0; times < 101741582076661; times++) {
+        console.log('command',times);
+        for (const command of commands) {            
+            if (command.command === 'cut') {
+                list.cut(command.count);
+            }
+            if (command.command === 'increment') {
+                list.increment(command.count);
+            }
+            if (command.command === 'new') {
+                list.newStack();
+            }
+            list.hasDup();
         }
-        if (command.command === 'increment') {
-            list.increment(command.count);
-        }
-        if (command.command === 'new') {
-            list.newStack();
-        }
-        list.hasDup();
     }
     list.print();
-    list.printIndex(2019);
+    list.printVal(2019);
 });
 
 class LinkedNode {
@@ -150,6 +153,14 @@ class LinkedList {
     }
 
     printIndex(val) {
+        let next = this.head;
+        for (let pos = 0; pos < 2020; pos++) {
+            next = next.next;
+        }
+        console.log(next.value);
+    }
+
+    printVal(val) {
         let next = this.head;
         let pos = 0;
         while (next.value !== val) {
