@@ -19,7 +19,7 @@ require('fs').readFile('./ex.input', (err, data) => {
             }
         });
 
-    let init = 2020;
+    let init = 0;
     let deckSize = 119315717514047;
     let steps = 101741582076661;
     // const forw = new SingleStack(init, deckSize);
@@ -122,3 +122,7 @@ class OppositeStack {
         this.currentPosition = i;
     }
 }
+
+this.init + this.diff*(other.diff*x+other.init)
+= this.init+other.init*this.diff+
+this.diff*other.diff * x
