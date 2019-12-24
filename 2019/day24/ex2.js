@@ -6,10 +6,18 @@ require('fs').readFile('./ex1.input', (err, data) => {
     let currentState = initialState;
     for (let i = 0; i < 200; i++) {
         const currentWithExtra = new Map(currentState);
-        const minLevel = Math.min(...currentState.keys()) - 1;
-        const maxLevel = Math.max(...currentState.keys()) + 1;
-        currentWithExtra.set(minLevel, createEmptyGrid());
-        currentWithExtra.set(maxLevel, createEmptyGrid());
+        const currentMin = Math.min(...currentState.keys());
+        const minHasBugs = [...currentWithExtra.get(currentMin).values()].filter(Boolean).length;
+        if (minHasBugs) {
+            currentWithExtra.set(currentMin - 1, createEmptyGrid());
+        }
+
+        const currentMax = Math.max(...currentState.keys());
+        const maxHasBugs = [...currentWithExtra.get(currentMax).values()].filter(Boolean).length;
+        if (maxHasBugs) {
+            currentWithExtra.set(currentMax + 1, createEmptyGrid());
+        }
+
         const levels = new Map();
         for (const [level, map] of currentWithExtra) {
             const nextMap = new Map();
@@ -79,7 +87,7 @@ require('fs').readFile('./ex1.input', (err, data) => {
     }
 
     function createEmptyGrid() {
-        let map = new Map();
+        const map = new Map();
         for (let x = 0; x < 5; x++) {
             for (let y = 0; y < 5; y++) {
                 if (x === 2 && y === 2) {
@@ -90,16 +98,7 @@ require('fs').readFile('./ex1.input', (err, data) => {
         }
         return map;
     }
-    const minLevel = Math.min(...currentState.keys());
-    const maxLevel = Math.max(...currentState.keys());
-    for (let level = minLevel; level <= maxLevel; level++) {
-        const thisLevel = currentState.get(level);
-        const curBugs = [...thisLevel.values()].filter(Boolean).length;
-        if (curBugs > 0) {
-            console.log(level, curBugs);
-            console.log(thisLevel);
-        }
-    }
+
     const vals = [...currentState.values()].map(x => [...x.values()]).flat().filter(Boolean);
     console.log(vals.length);
 });
