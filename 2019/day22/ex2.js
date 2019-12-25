@@ -24,25 +24,25 @@ require('fs').readFile('./ex.input', (err, data) => {
     const forw2 = new OppositeStack(1n, deckSize);
     const revCommands = commands.reverse();
     execute(forw, revCommands, deckSize);
-    execute(forw2, revCommands, deckSize);    
+    execute(forw2, revCommands, deckSize);
     const diff = forw2.currentPosition - forw.currentPosition % deckSize;
     console.log(`function is:${forw.currentPosition}+x*${diff} mod ${deckSize}`);
     const func = new Func(forw.currentPosition, diff, deckSize);
     const times = 101741582076661n;
     const bitRep = times.toString(2);
-    let map = new Map();
+    const map = new Map();
     let allFunc = func;
     map.set(0, allFunc);
     for (let i = 1; i < bitRep.length; i++) {
         allFunc = allFunc.composeSelf();
-        map.set(i, allFunc.clone());
+        map.set(i, allFunc);
     }
     var bitRepArr = bitRep.split('').reverse();
     let full = undefined;
     for (let i = 0; i < bitRep.length; i++) {
         if (bitRepArr[i] === '1') {
             if (full === undefined) {
-                full = map.get(i).clone();
+                full = map.get(i);
             } else {
                 full = full.compose(map.get(i));
             }
@@ -77,10 +77,6 @@ class Func {
 
     toString() {
         return `${this.init} + ${this.diff}*x mod ${this.mod}`;
-    }
-
-    clone() {
-        return new Func(this.init, this.diff, this.mod);
     }
 }
 
@@ -137,6 +133,6 @@ class OppositeStack {
             pos = (pos + delta * toMul) % this.total;
             i += toMul;
         }
-        throw new Error();
+        return pos;
     }
 }
