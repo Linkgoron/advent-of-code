@@ -1,12 +1,16 @@
-require('fs').readFile('./ex.input', (err, data) => {
+const readline = require('readline');
+require('fs').readFile('./ex.input', async (err, data) => {
     const startingState = data.toString().trim().split(',').map(Number);
-    console.log(startingState.filter(x => x < 256).map(x => String.fromCharCode(x)).join(''));
-    return
     const robot = new DroidModule();
-    runProgram(startingState, robot, robot);
+    await runProgram(startingState, robot, robot);
+    // items were:
+    // - tambourine
+    // - astronaut ice cream
+    // - mutex
+    // - easter egg
 });
 
-function runProgram(startingState, input, output) {
+async function runProgram(startingState, input, output) {
     const state = [...startingState];
     let relative = 0;
     for (let inst = 0; inst < state.length; inst++) {
@@ -50,7 +54,7 @@ function runProgram(startingState, input, output) {
             }
             case 3: {
                 const writePos = getWritePosition(modes[0], inst, state);
-                state[writePos] = input.read();
+                state[writePos] = await input.read();
                 continue;
             }
             case 4: {
@@ -95,34 +99,39 @@ function runProgram(startingState, input, output) {
     }
 }
 class DroidModule {
-    constructor() {
-        this.state = 0;
-        this.x = 0;
-        this.y = 0;
-        this.output = '';
-        this.wat = 0;
-        this.currentInput = undefined;
+    constructor(io) {
+        this.interface = io;
+        this.currentOutput = { pos: 0, content: '' };
     }
 
     write(value) {
-        if (value === 10) {
-            console.log(this.output);
-            this.output = '';
-            return;
-        }
-        this.output += String.fromCharCode(value);
+        const letter = String.fromCharCode(value);
+        process.stdout.write(letter);
     }
 
-    read() {
-        if (!this.currentInput || this.currentInput.current === this.currentInput.dir.length) {
-            this.currentInput = { current: 0, dir: 'south\n' };
-            this.wat++;
-            if (this.wat >= 2) {
-                this.currentInput = { current: 0, dir: 'west\n' };
-            }
+    async read() {
+        if (this.currentOutput.pos < this.currentOutput.content.length) {
+            return this.currentOutput.content.charCodeAt(this.currentOutput.pos++);
         }
+        let resp = await new Promise((resolve, reject) => {
+            const rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+            let response;
+            rl.on('line', (userInput) => {
+                response = userInput;
+                rl.close();
+            });
 
-        let letter = this.currentInput.dir.charCodeAt(this.currentInput.current++);
-        return letter;
+            rl.on('close', () => {
+                resolve(response + '\n');
+            });
+        });
+        if(resp === 'exit\n') {
+            process.exit(0);
+        }
+        this.currentOutput = { pos: 0, content: resp };
+        return this.currentOutput.content.charCodeAt(this.currentOutput.pos++);
     }
 }
