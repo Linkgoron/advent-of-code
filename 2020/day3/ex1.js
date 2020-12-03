@@ -8,14 +8,12 @@ fs.promises.readFile('./ex.input').then(data => {
     const iJump = 3;
     const jJump = 1;
     let total = 0;
-    while (j !== height) {
+    for (let i = 0, j = 0; j < height; i += iJump, j += jJump) {
         const row = map[j];
         const cell = row[i % width];
         if (cell === '#') {
             total++;
         }
-        i += iJump;
-        j += jJump;
     }
     console.log(total);
 });

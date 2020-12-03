@@ -9,17 +9,13 @@ fs.promises.readFile('./ex.input').then(data => {
 function calcSlope(iJump, jJump, map) {
     let width = map[0].length;
     let height = map.length;
-    let i = 0;
-    let j = 0;
     let total = 0;
-    while (j < height) {
+    for (let i = 0, j = 0; j < height; i += iJump, j += jJump) {
         const row = map[j];
         const cell = row[i % width];
         if (cell === '#') {
             total++;
         }
-        i += iJump;
-        j += jJump;
     }
     return total;
 }
