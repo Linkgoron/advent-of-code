@@ -9,7 +9,6 @@ fs.promises.readFile('./ex.input').then(data => {
 });
 
 function filter(passport) {
-    let i = 0;
     const keys = Object.keys(passport);
     if (keys.length < 7 || (keys.length === 7 && keys.includes('cid'))) {
         return false;
