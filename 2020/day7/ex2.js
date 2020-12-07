@@ -24,15 +24,16 @@ fs.promises.readFile('./ex.input').then(data => {
         bag.contains = new Set([...bag.bagSet].map(bagName => bagsList.find(x => x.bagName === bagName)));
     }
     const gold = bagsList.find(x => x.bagName === 'shiny gold');
-    const count = countIn(gold);
-    console.log(count - 1);
+    const count = countAll(gold);
+    const containedIn = count - 1;
+    console.log(containedIn);
 });
 
-function countIn(bag) {
+function countAll(bag) {
     let bagCount = 1;
     for (const innerBag of bag.contains) {
         const count = bag.heldBags.find(x => x.type === innerBag.bagName).amount;
-        bagCount += count * countIn(innerBag);
+        bagCount += count * countAll(innerBag);
     }
     return bagCount;
 }
