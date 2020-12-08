@@ -10,8 +10,8 @@ fs.promises.readFile('./ex.input').then(data => {
 
     let accumulator = 0;
     let ip = 0;
-
-    let executed = new Set();
+    const executed = new Set();
+    
     for (; ip >= 0 && ip < linesOfCode.length && !executed.has(ip); ip++) {
         executed.add(ip);
         const currentCommand = linesOfCode[ip];
