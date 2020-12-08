@@ -8,9 +8,9 @@ fs.promises.readFile('./ex.input').then(data => {
         }
     });
 
+    const executed = new Set();
     let accumulator = 0;
     let ip = 0;
-    const executed = new Set();
     
     for (; ip >= 0 && ip < linesOfCode.length && !executed.has(ip); ip++) {
         executed.add(ip);
