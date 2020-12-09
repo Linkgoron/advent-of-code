@@ -8,12 +8,9 @@ fs.promises.readFile('./ex.input').then(data => {
     let sum = numbers[start] + numbers[end];
     while (sum !== needed || start === end) {
         if (sum > needed) {
-            sum -= (numbers[start] + numbers[end]);
-            start++;
-            end--;
+            sum -= numbers[start++];
         } else if (sum < needed) {
-            sum += numbers[end + 1];
-            end++
+            sum += numbers[++end];
         }
 
         if (end === start) {
