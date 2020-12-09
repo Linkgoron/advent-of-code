@@ -14,7 +14,7 @@ fs.promises.readFile('./ex.input').then(data => {
         }
 
         if (end === start) {
-            end++;
+            sum += numbers[++end]
         }
     }
     const min = Math.min(...numbers.slice(start, end));
