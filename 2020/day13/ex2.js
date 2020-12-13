@@ -29,15 +29,14 @@ function findIt(num, mod) {
 * This function will be called as:
 *
 * chineseRemainder( [a1, a2], [n1, n2])
-* @return {integer}
+* @return {BigInt}
 */
 
 function mul_inv(a, b) {
-
-    var b0 = BigInt(b);
-    var x0 = BigInt(0);
-    var x1 = BigInt(1);
-    var q, tmp;
+    const b0 = BigInt(b);
+    let x0 = BigInt(0);
+    let x1 = BigInt(1);
+    let q, tmp;
     if (b == BigInt(1)) {
         return BigInt(1);
     }
@@ -61,13 +60,13 @@ function chineseRemainder(a, n) {
     let prod = BigInt(1);
     let sm = BigInt(0);
     for (let i = 0; i < n.length; i++) {
-        prod = BigInt(prod) * BigInt(n[i]);
+        prod = prod * n[i];
     }
     for (let i = 0; i < n.length; i++) {
         p = prod / n[i];
-        sm = sm + (a[i] * BigInt(mul_inv(p, n[i])) * p);
+        sm = sm + (a[i] * mul_inv(p, n[i]) * p);
     }
-    return BigInt(sm) % prod;
+    return sm % prod;
 }
 
 
