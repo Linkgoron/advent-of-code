@@ -30,13 +30,13 @@ fs.promises.readFile('./ex.input').then(raw => {
     console.log(Object.values(memory).reduce((acc, val) => acc + val, 0));
 });
 
-function* createMasks(mask, target, value, index = 0) {
+function* createMasks(mask, target, index = 0) {
     if (index === mask.length) {
         yield '';
         return;
     }
 
-    const results = createMasks(mask, target, value + target[index], index + 1);
+    const results = createMasks(mask, target, index + 1);
 
     for (const result of results) {
         if (mask[index] === '0') {
@@ -55,5 +55,5 @@ function* createMasks(mask, target, value, index = 0) {
 
 function maskify(mask, target) {
     const binary = Number(target).toString(2).padStart(mask.length, '0');
-    return [...createMasks(mask, binary, '', 0)];
+    return [...createMasks(mask, binary, 0)];
 }
