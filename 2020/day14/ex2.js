@@ -27,28 +27,30 @@ fs.promises.readFile('./ex.input').then(raw => {
             memory[target] = value;
         }
     }
-    console.log(mask, memory, Object.values(memory).reduce((acc, val) => acc + val, 0));
+    console.log(Object.values(memory).reduce((acc, val) => acc + val, 0));
 });
 
 function* createMasks(mask, target, value, index = 0) {
     if (index === mask.length) {
-        yield value;
+        yield '';
         return;
     }
 
-    if (mask[index] === '0') {
-        yield* createMasks(mask, target, value + target[index], index + 1);
-        return;
-    }
+    const results = createMasks(mask, target, value + target[index], index + 1);
 
-    if (mask[index] === '1') {
-        yield* createMasks(mask, target, value + '1', index + 1);
-        return;
-    }
+    for (const result of results) {
+        if (mask[index] === '0') {
+            yield result + target[index];
+            continue;
+        }
+        if (mask[index] === '1') {
+            yield result + '1';
+            continue;
+        }
 
-    yield* createMasks(mask, target, value + '0', index + 1);
-    yield* createMasks(mask, target, value + '1', index + 1);
-    return;
+        yield result + '0';
+        yield result + '1';
+    }
 }
 
 function maskify(mask, target) {
