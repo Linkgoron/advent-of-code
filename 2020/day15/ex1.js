@@ -18,7 +18,6 @@ fs.promises.readFile('./ex.input').then(raw => {
             }
             mem.set(prev, turn - 1);
         }
-
         prev = said;
     }
     console.log(prev);
