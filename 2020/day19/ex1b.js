@@ -29,7 +29,7 @@ fs.promises.readFile('./ex.input').then(data => {
     console.log(res.size, words.filter(x => sol.test(x)).length);
 });
 
-function unpackify(rules, watAboutism) {
+function unpackify(rules) {
     const initialStates = rules.filter(x => x.needs.size === 0);
     const toVisit = new Set(initialStates);
     const visited = new Set();
