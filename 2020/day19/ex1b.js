@@ -1,13 +1,11 @@
 const fs = require('fs');
 fs.promises.readFile('./ex.input').then(data => {
-
     const { rules, words } = data.toString().trim().split(/\r?\n/gm).reduce((acc, x) => {
         if (x === '') {
             return acc;
         }
         if (x.includes(':')) {
             const [number, rest] = x.split(': ');
-
             const rules = rest.replace(/\"/g, '').split(' | ');
             acc.rules.push({
                 number: number,

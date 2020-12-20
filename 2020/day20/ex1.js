@@ -43,7 +43,6 @@ function search(pieces, map = new Map(), taken = new Set(), location = { x: 0, y
         for (let v = 0; v < 2; v++) {
             for (let dir = 0; dir < 4; dir++) {
                 if (doesFit(currentPiece, up, left)) {
-
                     const key = `${location.x},${location.y}`;
                     map.set(key, currentPiece);
                     taken.add(currentPiece.number);

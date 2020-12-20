@@ -19,7 +19,6 @@ fs.promises.readFile('./ex.input').then(data => {
     tiles.sort((a, b) => (a.canMatch.size - b.canMatch.size));
     const res = search(tiles);
     const len = Math.sqrt(tiles.length) - 1;
-
     const finalRes = stitch(res, len + 1, tiles[0].tile[0].length);
     console.log(finalRes);
 });
@@ -41,12 +40,12 @@ function stitch(map, rowCount, tileSize) {
         }
         rows.push(rowStr);
     }
-    let current = rows;
     const total = rows.reduce((acc, cur) => cur.split('').filter(x => x === '#').length + acc, 0);
     const monster = [/..................#./, /#....##....##....###/, /.#..#..#..#..#..#.../];
     const monsterSize = monster[0].source.concat(monster[1].source).concat(monster[2].source).split('').filter(x => x === '#').length;
     const monsterLength = monster[0].source.length;
-
+    
+    let current = rows;
     for (let v = 0; v < 2; v++) {
         for (let orientation = 0; orientation < 4; orientation++) {
             let cancel = 0;
