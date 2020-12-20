@@ -91,7 +91,7 @@ function rotateRight(fullTile) {
         return rotationMap.get(fullTile);
     }
     const { tile, number, options, canMatch } = fullTile;
-    let newTile = [];
+    const newTile = [];
     for (let i = 0; i < tile.length; i++) {
         newTile[i] = [...getColumn(tile, i)].reverse().join('');
     }
@@ -114,11 +114,7 @@ function flipVertical(fullTile) {
     }
     const { tile, number, options, canMatch } = fullTile;
 
-    const newTile = [];
-    for (let i = 0; i < tile.length; i++) {
-        newTile[i] = tile[tile.length - 1 - i];
-    }
-
+    const newTile = tile.slice().reverse();
     const res = {
         number,
         sides: [...getSides(newTile)],

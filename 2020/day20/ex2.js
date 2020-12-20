@@ -65,7 +65,7 @@ function stitch(map, rowCount, tileSize) {
             }
             current = rotateRightString(current);
         }
-        current = flipVertString(current);
+        current = current.slice().reverse();
     }
     throw new Error('wat');
 }
@@ -142,10 +142,7 @@ function rotateRight(fullTile) {
         return rotationMap.get(fullTile);
     }
     const { tile, number, options, canMatch } = fullTile;
-    let newTile = [];
-    for (let i = 0; i < tile.length; i++) {
-        newTile[i] = [...getColumn(tile, i)].reverse().join('');
-    }
+    let newTile = rotateRightString(tile);
     const res = {
         number,
         sides: [...getSides(newTile)],
@@ -164,12 +161,7 @@ function flipVertical(fullTile) {
         return flipVerticalMap.get(fullTile);
     }
     const { tile, number, options, canMatch } = fullTile;
-
-    const newTile = [];
-    for (let i = 0; i < tile.length; i++) {
-        newTile[i] = tile[tile.length - 1 - i];
-    }
-
+    const newTile = tile.slice().reverse();
     const res = {
         number,
         sides: [...getSides(newTile)],
@@ -183,17 +175,9 @@ function flipVertical(fullTile) {
 }
 
 function rotateRightString(tile) {
-    let newTile = Array(tile.length);
+    const newTile = Array(tile.length);
     for (let i = 0; i < tile.length; i++) {
         newTile[i] = [...getColumn(tile, i)].reverse().join('');
-    }
-    return newTile;
-}
-
-function flipVertString(tile) {
-    let newTile = [];
-    for (let i = 0; i < tile.length; i++) {
-        newTile[i] = tile[tile.length - 1 - i];
     }
     return newTile;
 }
