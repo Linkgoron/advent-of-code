@@ -26,7 +26,7 @@ fs.promises.readFile('./ex.input').then(data => {
 
     const sorted = [...solvedIngredients].sort(([key, value], [key2, value2]) => value.localeCompare(value2));
     const sorting = sorted.map(([key, value]) => key).join(',');
-    console.log(sorted, sorting);
+    console.log(sorting);
 });
 
 function subtract(seta, setb) {
