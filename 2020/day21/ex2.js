@@ -1,4 +1,3 @@
-const { EEXIST } = require('constants');
 const fs = require('fs');
 fs.promises.readFile('./ex.input').then(data => {
     const stuff = data.toString().trim().split(/\r?\n/gm).map(x => {
