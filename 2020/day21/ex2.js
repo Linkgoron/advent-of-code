@@ -11,11 +11,11 @@ fs.promises.readFile('./ex.input').then(data => {
     const solvedAlergens = new Set();
     const solvedIngredients = new Map();
     while (solvedAlergens.size !== allAlergens.size) {
-        const missing = difference(allAlergens, solvedAlergens);
+        const missing = subtract(allAlergens, solvedAlergens);
         for (const missingAlergen of missing) {
             const relevant = stuff.filter(x => x.alergens.has(missingAlergen));
             const allPossible = relevant.reduce((acc, x) => instersect(acc, x.ingerdients), relevant[0].ingerdients);
-            const possible = difference(allPossible, new Set(solvedIngredients.keys()));
+            const possible = subtract(allPossible, new Set(solvedIngredients.keys()));
             if (possible.size === 1) {
                 const found = [...possible][0];
                 solvedIngredients.set(found, missingAlergen)
@@ -29,7 +29,7 @@ fs.promises.readFile('./ex.input').then(data => {
     console.log(sorted, sorting);
 });
 
-function difference(seta, setb) {
+function subtract(seta, setb) {
     const newSet = new Set();
     for (const elem of seta) {
         if (!setb.has(elem)) {
