@@ -15,7 +15,7 @@ fs.promises.readFile('./ex.input').then(data => {
         const missing = subtract(allAlergens, solvedAlergens);
         for (const missingAlergen of missing) {
             const relevant = stuff.filter(x => x.alergens.has(missingAlergen));
-            const allPossible = relevant.reduce((acc, x) => instersect(acc, x.ingerdients), relevant[0].ingerdients);
+            const allPossible = relevant.reduce((acc, x) => intersect(acc, x.ingerdients), relevant[0].ingerdients);
             const possible = subtract(allPossible, new Set(solvedIngredients.keys()));
             if (possible.size === 1) {
                 const found = [...possible][0];
@@ -25,7 +25,7 @@ fs.promises.readFile('./ex.input').then(data => {
         }
     }
     const noAlergens = subtract(allIngredients, new Set(solvedIngredients.keys()));
-    const count = stuff.reduce((acc, x) => acc + instersect(noAlergens, x.ingerdients).size, 0);
+    const count = stuff.reduce((acc, x) => acc + intersect(noAlergens, x.ingerdients).size, 0);
     console.log(count);
 });
 
@@ -39,7 +39,7 @@ function subtract(seta, setb) {
     return newSet;
 }
 
-function instersect(seta, setb) {
+function intersect(seta, setb) {
     const newSet = new Set();
     for (const elem of seta) {
         if (setb.has(elem)) {
