@@ -133,6 +133,5 @@ class OppositeStack {
             pos = (pos + delta * toMul) % this.total;
             i += toMul;
         }
-        return pos;
     }
 }

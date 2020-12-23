@@ -37,9 +37,6 @@ class Ring {
             nextCup = nextCup > this.min ? nextCup - 1 : this.max;
         }
         const destination = this.items.get(nextCup);
-        if (destination === undefined) {
-            console.log(destination, nextCup, this.current.number, this.min);
-        }
         item.next = lastRemove.next;
         const newNext = destination.next;
         destination.next = firstRemove;
