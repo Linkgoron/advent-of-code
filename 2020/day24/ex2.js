@@ -1,6 +1,6 @@
 const fs = require('fs');
 fs.promises.readFile('./ex.input').then(data => {
-    let allDirs = data.toString().trim().split(/\r?\n/gm).map(x => {
+    const allDirs = data.toString().trim().split(/\r?\n/gm).map(x => {
         const dirs = [];
         for (let i = 0; i < x.length; i++) {
             if (x[i] === 'e' || x[i] === 'w') {
@@ -10,7 +10,6 @@ fs.promises.readFile('./ex.input').then(data => {
             if (x[i] === 's' || x[i] === 'n') {
                 dirs.push(x[i] + x[i + 1]);
                 i++;
-                continue;
             }
         }
         return dirs;
