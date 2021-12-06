@@ -13,7 +13,6 @@ fs.promises.readFile('./ex.input').then(data => {
         yDir: (start.y === end.y ? 0 : (((start.y > end.y) ? -1 : 1))),
         dist: Math.max(Math.abs(start.x - end.x), Math.abs(start.y - end.y)),
     }));
-    // console.log(lines);
     let marked = new Map();
     for (const line of lines) {
         let currentX = line.start.x;
@@ -40,7 +39,6 @@ fs.promises.readFile('./ex.input').then(data => {
             const currentValue = marked.get(coordinate) || '.';
             str += currentValue.toString();
         }
-        // console.log(str);
     }
     console.log([...marked.values()].filter(x => x >= 2).length);
 });
