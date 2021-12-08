@@ -7,6 +7,7 @@ fs.promises.readFile('./ex.input').then(data => {
     }, new Map());
 
     let currentState = daysPerStuff;
+    let tomorrow = new Map();
     for (let i = 0; i < 256; i++) {
         currentState = [...currentState].reduce((agg, [days, count]) => {
             if (days === 0) {
