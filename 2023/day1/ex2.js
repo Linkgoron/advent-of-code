@@ -4,9 +4,8 @@ fs.readFile('./ex.input', (err, data) => {
     if (err) throw new Error("data :(");
     const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
     const all = numbers.join('|');
-    const allRev = numbers.map(x => x.split('').reverse().join('')).join('|');
     const regex = new RegExp(all);
-    const regexRev = new RegExp(allRev);
+    const regexRev = new RegExp([...all].reverse().join(''));
     const sum = data.toString().trim().split('\n').map(x => {
         const matches = x.match(regex);
         const firstMatch = digitNameToNumber(matches[0]);
@@ -16,8 +15,6 @@ fs.readFile('./ex.input', (err, data) => {
     }).reduce((acc, cur) => acc + cur, 0);
     console.log(sum);
 });
-
-
 
 function digitNameToNumber(number) {
     if (number === 'one') return 1;
