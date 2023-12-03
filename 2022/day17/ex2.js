@@ -1,138 +1,158 @@
 const fs = require('fs');
 fs.promises.readFile('./ex.input').then(data => {
-    const nodes = data.toString().trim().split(/\r?\n/).map(row => {
-        const [nameRate, to] = row.split('; ');
-        const { 1: name, 4: rawRate } = nameRate.split(' ');
-        const rate = Number(rawRate.split('=')[1]);
-        return {
-            name,
-            rate,
-            to: to.replace(/tunnels? leads? to valves? /, '').trim().split(', '),
-            fake: rate === 0,
-            realDistance: new Map(),
+    const wind = data.toString().trim().split('');
+    const shapes = [{
+        form: ['####'],
+    }, {
+        form: [' # ', '###', ' # ']
+    }, {
+        form: ['  #', '  #', '###'],
+    }, {
+        form: ['#', '#', '#', '#'],
+    }, {
+        form: ['##', '##'],
+    }];
+
+    const map = new Set();
+    let maxY = -1;
+    let winder = 0;
+    for (let i = 0; i < 185+1255; i++) {
+        if (i === 185 || i === 3625) {
+            console.log(maxY + 1);
         }
-    });
-    const realNodes = buildSmall(nodes);
-    const relevantTargets = realNodes.filter(x => x.name !== 'AA');
-    const startNode = realNodes.find(x => x.name === 'AA');
-    let max = { huPos: { when: 0, node: startNode }, elPos: { when: 0, node: startNode }, turnedOn: new Set(), time: 0, rate: 0, areOnKey: '' };
-    const byTime = new Map([[0, [{ huPos: { when: 0, node: startNode }, elPos: { when: 0, node: startNode }, turnedOn: new Set(), time: 0, rate: 0, areOnKey: '' }]]]);
-    for (let i = 1; i < 26; i++) {
-        byTime.set(i, []);
-    }
-    
-    for (const [time, values] of byTime) {
-        console.log(time);
-        byTime.delete(time - 1);
-        const stateMap = new Map();
-        for (const value of values) {
-            const areOnKey = value.areOnKey;
-            const stateKey = `${value.huPos.node.name}, ${value.elPos.node.name}, ${areOnKey}`;
-            const otherStateKey = `${value.elPos.node.name}, ${value.huPos.node.name}, ${areOnKey}`;
-            if (stateMap.has(stateKey)) {
-                const otherState = stateMap.get(stateKey);
-                if (otherState.rate < value.rate) {
-                    stateMap.set(stateKey, value);
-                }
-            } else if (stateMap.has(otherStateKey)) {
-                const otherState = stateMap.get(otherStateKey);
-                if (otherState.rate < value.rate) {
-                    stateMap.set(otherStateKey, value);
-                }
+        const shape = shapes[i % shapes.length];
+        let wasStopped = false;
+        let position = getStartLocation(2, maxY + 3, shape);
+        let prevLocation;
+        while (!wasStopped) {
+            drawShapeLocs(map, position, prevLocation);
+            const dir = wind[winder];
+            winder = (winder + 1) % wind.length;
+            const windMove = canMove(map, position, dir);
+            if (windMove.canMove) {
+                drawShapeLocs(map, windMove.nextPositions, position);
+                position = windMove.nextPositions;
+            }
+
+            const moveDown = canMove(map, position);
+            if (!moveDown.canMove) {
+                wasStopped = true;
             } else {
-                stateMap.set(stateKey, value);
+                prevLocation = position;
+                position = moveDown.nextPositions;
             }
         }
-        for (const currentState of stateMap.values()) {
-            let afterOnState = { ...currentState };
-            const newOn = new Set(currentState.turnedOn);
-            if (currentState.time === currentState.huPos.when) {
-                if (!newOn.has(currentState.huPos.node)) {
-                    afterOnState.rate += (26 - currentState.time) * currentState.huPos.node.rate;
-                }
-                newOn.add(currentState.huPos.node);
-            }
-
-            if (currentState.time === currentState.elPos.when) {
-                if (!newOn.has(currentState.elPos.node)) {
-                    afterOnState.rate += (26 - currentState.time) * currentState.elPos.node.rate;
-                }
-                newOn.add(currentState.elPos.node);
-            }
-
-            if (afterOnState.rate > max.rate) {
-                max = afterOnState;
-            }
-
-            const areOnKey = [...newOn].map(x => x.name).sort((a, b) => a.localeCompare(b)).join('_');
-            const currentRelevantTargets = relevantTargets.filter(x => !newOn.has(x));
-            for (const node of currentRelevantTargets) {
-                if (currentState.time === currentState.huPos.when && currentState.time !== currentState.elPos.when) {
-                    const nextHumanPos = { when: currentState.time + currentState.huPos.node.realDistance.get(node), node, areOnKey };
-                    const minTime = Math.min(nextHumanPos.when, currentState.elPos.when);
-                    if (minTime >= 26) {
-                        continue;
-                    }
-                    byTime.get(minTime).push({ huPos: nextHumanPos, elPos: currentState.elPos, turnedOn: newOn, time: minTime, rate: afterOnState.rate, areOnKey });
-                    if (time >=minTime) {
-                        console.log(time, minTime);
-                    }
-                    continue;
-                }
-                if (currentState.time === currentState.elPos.when && currentState.time !== currentState.huPos.when) {
-                    const nextElPos = { when: currentState.time + currentState.elPos.node.realDistance.get(node), node };
-                    const minTime = Math.min(nextElPos.when, currentState.huPos.when);
-                    if (minTime >= 26) {
-                        continue;
-                    }
-                    byTime.get(minTime).push(({ huPos: currentState.huPos, elPos: nextElPos, turnedOn: newOn, time: minTime, rate: afterOnState.rate, areOnKey}));
-                    continue;
-                }
-                if (currentRelevantTargets.length === 1) {
-                    const nextHumanPos = { when: currentState.time + currentState.huPos.node.realDistance.get(node), node };
-                    const nextElPos = { when: currentState.time + currentState.elPos.node.realDistance.get(node), node };
-                    const minTime = Math.min(nextElPos.when, nextElPos.when);
-                    if (minTime >= 26) {
-                        continue;
-                    }
-                    byTime.get(minTime).push(({ huPos: nextHumanPos, elPos: nextElPos, turnedOn: newOn, time: minTime, rate: afterOnState.rate, areOnKey}));
-                    continue;
-                }
-                for (const otherNode of currentRelevantTargets) {
-                    if (node === otherNode) { continue; }
-                    const nextHumanPos = { when: currentState.time + currentState.huPos.node.realDistance.get(node), node };
-                    const nextElPos = { when: currentState.time + currentState.elPos.node.realDistance.get(otherNode), node: otherNode };
-                    const minTime = Math.min(nextHumanPos.when, nextElPos.when);
-                    if (minTime >= 26) {
-                        continue;
-                    }
-                    byTime.get(minTime).push(({ huPos: nextHumanPos, elPos: nextElPos, turnedOn: newOn, time: minTime, rate: afterOnState.rate, areOnKey }));
-                }
-            }
-        }
+        maxY = Math.max(maxY, ...position.map(x => x.y));
     }
-    console.log(max.rate, max.turnedOn.size);
+    // printMap(map);
+    console.log(maxY + 1);
 });
 
-function buildSmall(nodes) {
-    const realNodes = nodes.filter(x => !x.fake || x.name === 'AA');
-    const origNodeMap = new Map(nodes.map(x => [x.name, x]));
-    for (const startNode of realNodes) {
-        let toVisit = new Map([[startNode, 0]]);
-        for (const [targetNode, distance] of toVisit) {
-            if (!targetNode.fake && targetNode !== startNode) {
-                startNode.realDistance.set(targetNode, distance + 1);
-                if (startNode.name !== 'AA') {
-                    targetNode.realDistance.set(startNode, distance + 1);
-                }
-            }
-            for (const neighbour of targetNode.to) {
-                const node = origNodeMap.get(neighbour)
-                if (!toVisit.has(node)) {
-                    toVisit.set(node, distance + 1);
-                }
+function getStartLocation(startX, startY, shape) {
+    const positions = [];
+    let topY = startY + shape.form.length;
+    for (let y = 0; y < shape.form.length; y++) {
+        const row = shape.form[y];
+        for (let x = 0; x < row.length; x++) {
+            const xCoordinate = startX + x;
+            const yCoordinate = topY - y;
+            if (row[x] !== ' ') {
+                positions.push({ x: xCoordinate, y: yCoordinate });
             }
         }
     }
-    return realNodes;
+    return positions;
 }
+
+function drawShapeLocs(map, nextLocation, prevLocation) {
+    if (prevLocation) {
+        for (const loc of prevLocation) {
+            map.delete(`${loc.x}, ${loc.y}`);
+        }
+    }
+    for (const loc of nextLocation) {
+        map.add(`${loc.x}, ${loc.y}`);
+    }
+}
+
+function canMove(map, shapePosition, direction) {
+    if (direction === '>') {
+        const r = Math.max(...shapePosition.map(x => x.x));
+        if (r === 6) {
+            return { canMove: false };
+        }
+        const myPoints = new Set(shapePosition.map(x => `${x.x}, ${x.y}`));
+        const nextPositions = shapePosition.map(x => ({ x: x.x + 1, y: x.y }));
+        const canMove = nextPositions.every(pos => myPoints.has(`${pos.x}, ${pos.y}`) || !map.has(`${pos.x}, ${pos.y}`));
+        if (!canMove) {
+            return { canMove: false };
+        }
+        return { canMove: true, nextPositions };
+    }
+
+    if (direction === '<') {
+        const r = Math.min(...shapePosition.map(x => x.x));
+        if (r === 0) {
+            return { canMove: false };
+        }
+        const myPoints = new Set(shapePosition.map(x => `${x.x}, ${x.y}`));
+        const nextPositions = shapePosition.map(x => ({ x: x.x - 1, y: x.y }));
+        const canMove = nextPositions.every(pos => myPoints.has(`${pos.x}, ${pos.y}`) || !map.has(`${pos.x}, ${pos.y}`));
+        if (!canMove) {
+            return { canMove: false };
+        }
+        return { canMove: true, nextPositions };
+    }
+
+    const r = Math.min(...shapePosition.map(x => x.y));
+    if (r === 0) {
+        return { canMove: false };
+    }
+    const myPoints = new Set(shapePosition.map(x => `${x.x}, ${x.y}`));
+    const nextPositions = shapePosition.map(x => ({ x: x.x, y: x.y - 1 }));
+    const canMove = nextPositions.every(pos => myPoints.has(`${pos.x}, ${pos.y}`) || !map.has(`${pos.x}, ${pos.y}`));
+    if (!canMove) {
+        return false;
+    }
+    return { canMove: true, nextPositions };
+}
+
+function printMap(map) {
+    const minX = 0;
+    const maxX = 7;
+    const minY = 0;
+    const maxY = Math.max(3, ...[...map].map(x => Number(x.split(', ')[1])));
+    for (let y = maxY; y >= minY; y--) {
+        let row = '|';
+        for (let x = minX; x < maxX; x++) {
+            const key = `${x}, ${y}`;
+            if (map.has(key)) {
+                row += '#';
+            } else {
+                row += ' ';
+            }
+        }
+        row += '|'
+        console.log(row);
+    }
+    let lastRow = '|';
+    for (let x = minX; x < maxX; x++) {
+        lastRow += '-';
+    }
+    lastRow += '|';
+    console.log(lastRow);
+    console.log();
+}
+
+const pattern = [
+    '  ###  ',
+    '  ###  ',
+    '   #   ',
+    '  ###  ',
+    '   ##  ',
+    '    #  ',
+    '    #  ',
+    '    #  ',
+    '    #  ',
+    '#####  '
+]

@@ -38,17 +38,11 @@ fs.promises.readFile('./ex.input').then(data => {
             ranges.push({ leftX: Math.max(0, leftX), rightX: Math.min(maxVal, rightX) });
         }
 
-        rnages = ranges.sort((a,b) => {
-            if (b.leftX < a.leftX) {
-                return 1;
-            }
-            return a.rightX - b.rightX;
-        })
         let wasMerge = true;
         while (wasMerge) {
             wasMerge = false;
             for (let i = 0; i < (ranges.length - 1); i++) {
-                const canUnify = canMerge(ranges[i], ranges[i + 1], false);
+                const canUnify = canMerge(ranges[i], ranges[i + 1], false, targetRow === 11);
                 if (canUnify) {
                     wasMerge = true;
                     const newRow = merge(ranges[i], ranges[i + 1]);                    
@@ -61,12 +55,14 @@ fs.promises.readFile('./ex.input').then(data => {
         
         let count = ranges.map(x => x.rightX - x.leftX + 1).reduce((a, b) => a + b, 0);
         if (count !== (maxVal + 1)) {
+            console.log(targetRow, count, maxVal);
             const rng = ranges.sort((rng1, rng2) => rng1.leftX - rng2.leftX);
+            console.log(rng);
             if (ranges[0].leftX !== 0) {
                 console.log(targetRow);
                 return;
             } else if (ranges[ranges.length-1].rightX !== maxVal) {
-                console.log(maxVal * 4000000 + targetRow);
+                console.log('zzz', maxVal * 4000000 + targetRow);
                 return;
             }
             for (let i = 0; i < (rng.length - 1); i++) { 
@@ -80,6 +76,9 @@ fs.promises.readFile('./ex.input').then(data => {
     }
     console.log('failed');
 });
+function getKey(x, y) {
+    return `${x}, ${y}`;
+}
 
 function canMerge(partOne, partTwo, reverse, print = false) {
     if (partTwo.leftX <= partOne.leftX && partOne.leftX <= partTwo.rightX) {
@@ -88,16 +87,12 @@ function canMerge(partOne, partTwo, reverse, print = false) {
     if (partTwo.rightX >= partOne.rightX && partOne.rightX >= partTwo.leftX) {
         return true;
     }
-
     if (partOne.rightX >= partTwo.rightX && partOne.leftX <= partTwo.leftX) {
         return true;
     }
 
-    if (partTwo.rightX >= partOne.rightX && partTwo.leftX <= partOne.leftX) {
-        return true;
-    }
-
-    return false
+    if (reverse) { return false; }
+    return canMerge(partTwo, partOne, true, print);
 }
 
 function merge(left, right) {
